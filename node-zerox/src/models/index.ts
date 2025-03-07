@@ -6,12 +6,14 @@ import {
   ModelInterface,
   ModelProvider,
   OpenAICredentials,
+  OpenRouterCredentials
 } from "../types";
 import { validateLLMParams } from "../utils/model";
 import AzureModel from "./azure";
 import BedrockModel from "./bedrock";
 import GoogleModel from "./google";
 import OpenAIModel from "./openAI";
+import OpenRouterModel from "./openrouter";
 
 // Type guard for Azure credentials
 const isAzureCredentials = (
@@ -29,6 +31,12 @@ const isBedrockCredentials = (
   credentials: any
 ): credentials is BedrockCredentials => {
   return credentials && typeof credentials.region === "string";
+};
+
+const isOpenRouterCredentials = (
+  credentials: any
+): credentials is OpenRouterCredentials => {
+  return credentials && typeof credentials.apiKey === "string";
 };
 
 // Type guard for Google credentials
@@ -72,6 +80,11 @@ export const createModel = ({
     case ModelProvider.OPENAI:
       if (!isOpenAICredentials(credentials)) {
         throw new Error("Invalid credentials for OpenAI provider");
+      }
+      return new OpenAIModel(credentials, model, validatedParams);
+    case ModelProvider.OPEN_ROUTER:
+      if (!isOpenRouterCredentials(credentials)) {
+        throw new Error("Invalid credentials for OpenRouter provider");
       }
       return new OpenAIModel(credentials, model, validatedParams);
     default:

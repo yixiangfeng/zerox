@@ -69,11 +69,16 @@ export interface OpenAICredentials {
   apiKey: string;
 }
 
+export interface OpenRouterCredentials {
+  apiKey: string;
+}
+
 export type ModelCredentials =
   | AzureCredentials
   | BedrockCredentials
   | GoogleCredentials
-  | OpenAICredentials;
+  | OpenAICredentials
+  | OpenRouterCredentials;
 
 export enum ModelOptions {
   // Bedrock Claude 3 Models
@@ -101,6 +106,7 @@ export enum ModelProvider {
   BEDROCK = "BEDROCK",
   GOOGLE = "GOOGLE",
   OPENAI = "OPENAI",
+  OPEN_ROUTER = "OPEN_ROUTER",
 }
 
 export enum OperationMode {
