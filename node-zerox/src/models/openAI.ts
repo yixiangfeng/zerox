@@ -114,7 +114,7 @@ export default class OpenAIModel implements ModelInterface {
 
     try {
       const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
+        "https://openrouter.ai/api/v1/chat/completions",
         {
           messages,
           model: this.model,
@@ -160,7 +160,7 @@ export default class OpenAIModel implements ModelInterface {
       });
 
       const response = await axios.post(
-        "https://api.openai.com/v1/chat/completions",
+        "https://openrouter.ai/api/v1/chat/completions",
         {
           messages,
           model: this.model,
