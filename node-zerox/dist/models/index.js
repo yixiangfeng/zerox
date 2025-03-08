@@ -10,6 +10,7 @@ var azure_1 = __importDefault(require("./azure"));
 var bedrock_1 = __importDefault(require("./bedrock"));
 var google_1 = __importDefault(require("./google"));
 var openAI_1 = __importDefault(require("./openAI"));
+var openrouter_1 = __importDefault(require("./openrouter"));
 // Type guard for Azure credentials
 var isAzureCredentials = function (credentials) {
     return (credentials &&
@@ -59,7 +60,7 @@ var createModel = function (_a) {
             if (!isOpenRouterCredentials(credentials)) {
                 throw new Error("Invalid credentials for OpenRouter provider");
             }
-            return new openAI_1.default(credentials, model, validatedParams);
+            return new openrouter_1.default(credentials, model, validatedParams);
         default:
             throw new Error("Unsupported model provider: ".concat(provider));
     }

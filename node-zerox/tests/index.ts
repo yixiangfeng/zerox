@@ -6,7 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import pLimit from "p-limit";
 
-dotenv.config({ path: path.join(process.cwd(), "../.env") });
+dotenv.config({ path: path.join(__dirname, "../.env") });
 
 interface TestInput {
   expectedKeywords: string[][];
@@ -14,9 +14,9 @@ interface TestInput {
 }
 
 const FILE_CONCURRENCY = 10;
-const INPUT_DIR = path.join(process.cwd(), "../../shared/inputs");
-const TEST_JSON_PATH = path.join(process.cwd(), "../../shared/test.json");
-const OUTPUT_DIR = path.join(process.cwd(), "results", `test-run-${Date.now()}`);
+const INPUT_DIR = path.join(__dirname, "../../shared/inputs");
+const TEST_JSON_PATH = path.join(__dirname, "../../shared/test.json");
+const OUTPUT_DIR = path.join(__dirname, "results", `test-run-${Date.now()}`);
 const TEMP_DIR = path.join(OUTPUT_DIR, "temp");
 
 async function main() {

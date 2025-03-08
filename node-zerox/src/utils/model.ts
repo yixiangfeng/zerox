@@ -82,6 +82,13 @@ const providerDefaultParams: Record<ModelProvider | string, LLMParams> = {
     temperature: 0,
     topP: 1,
   },
+  [ModelProvider.OPEN_ROUTER]: {
+    frequencyPenalty: 0,
+    maxTokens: 4000,
+    presencePenalty: 0,
+    temperature: 0,
+    topP: 1,
+  },
 };
 
 export const validateLLMParams = (

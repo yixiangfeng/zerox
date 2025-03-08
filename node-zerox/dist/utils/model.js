@@ -67,6 +67,13 @@ var providerDefaultParams = (_a = {},
         temperature: 0,
         topP: 1,
     },
+    _a[types_1.ModelProvider.OPEN_ROUTER] = {
+        frequencyPenalty: 0,
+        maxTokens: 4000,
+        presencePenalty: 0,
+        temperature: 0,
+        topP: 1,
+    },
     _a);
 var validateLLMParams = function (params, provider) {
     var defaultParams = providerDefaultParams[provider];

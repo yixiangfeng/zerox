@@ -86,7 +86,7 @@ export const createModel = ({
       if (!isOpenRouterCredentials(credentials)) {
         throw new Error("Invalid credentials for OpenRouter provider");
       }
-      return new OpenAIModel(credentials, model, validatedParams);
+      return new OpenRouterModel(credentials, model, validatedParams);
     default:
       throw new Error(`Unsupported model provider: ${provider}`);
   }
