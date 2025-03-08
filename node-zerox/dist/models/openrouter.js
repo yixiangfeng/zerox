@@ -154,7 +154,7 @@ var OpenRouterModel = /** @class */ (function () {
                         _d.label = 2;
                     case 2:
                         _d.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, axios_1.default.post("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", __assign({ messages: messages, model: this.model }, (0, utils_1.convertKeysToSnakeCase)((_c = this.llmParams) !== null && _c !== void 0 ? _c : null)), {
+                        return [4 /*yield*/, axios_1.default.post("https://openrouter.ai/api/v1/chat/completions", __assign({ messages: messages, model: this.model }, (0, utils_1.convertKeysToSnakeCase)((_c = this.llmParams) !== null && _c !== void 0 ? _c : null)), {
                                 headers: {
                                     Authorization: "Bearer ".concat(this.apiKey),
                                     "Content-Type": "application/json",

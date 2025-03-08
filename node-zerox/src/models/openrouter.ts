@@ -113,7 +113,7 @@ export default class OpenRouterModel implements ModelInterface {
 
     try {
       const response = await axios.post(
-        "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        "https://openrouter.ai/api/v1/chat/completions",
         {
           messages,
           model: this.model,
