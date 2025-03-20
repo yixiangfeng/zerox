@@ -57,9 +57,20 @@ var axios_1 = __importDefault(require("axios"));
 var fs_extra_1 = __importDefault(require("fs-extra"));
 var OpenRouterModel = /** @class */ (function () {
     function OpenRouterModel(credentials, model, llmParams) {
+        var _a;
         this.apiKey = credentials.apiKey;
         this.model = model;
-        this.llmParams = llmParams;
+        this.llmParams = {
+            frequencyPenalty: llmParams === null || llmParams === void 0 ? void 0 : llmParams.frequencyPenalty,
+            maxTokens: llmParams === null || llmParams === void 0 ? void 0 : llmParams.maxTokens,
+            presencePenalty: llmParams === null || llmParams === void 0 ? void 0 : llmParams.presencePenalty,
+            temperature: llmParams === null || llmParams === void 0 ? void 0 : llmParams.temperature,
+            topP: llmParams === null || llmParams === void 0 ? void 0 : llmParams.topP,
+        };
+        this.helicone = {
+            helicone: (llmParams === null || llmParams === void 0 ? void 0 : llmParams.helicone) || false,
+            heliconeToken: (_a = llmParams === null || llmParams === void 0 ? void 0 : llmParams.heliconeToken) !== null && _a !== void 0 ? _a : null,
+        };
     }
     OpenRouterModel.prototype.getCompletion = function (mode, params) {
         return __awaiter(this, void 0, void 0, function () {
@@ -123,7 +134,7 @@ var OpenRouterModel = /** @class */ (function () {
     };
     OpenRouterModel.prototype.handleOCR = function (_a) {
         return __awaiter(this, arguments, void 0, function (_b) {
-            var systemPrompt, messages, base64Image, response, data, err_1;
+            var systemPrompt, messages, base64Image, url, header, response, data, err_1;
             var _c;
             var image = _b.image, maintainFormat = _b.maintainFormat, priorPage = _b.priorPage;
             return __generator(this, function (_d) {
@@ -154,12 +165,24 @@ var OpenRouterModel = /** @class */ (function () {
                         _d.label = 2;
                     case 2:
                         _d.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, axios_1.default.post("https://openrouter.ai/api/v1/chat/completions", __assign({ messages: messages, model: this.model }, (0, utils_1.convertKeysToSnakeCase)((_c = this.llmParams) !== null && _c !== void 0 ? _c : null)), {
+                        url = this.helicone.helicone
+                            ? "https://openrouter.helicone.ai/api/v1/chat/completions"
+                            : "https://openrouter.ai/api/v1/chat/completions";
+                        header = this.helicone.helicone
+                            ? {
+                                headers: {
+                                    Authorization: "Bearer ".concat(this.apiKey),
+                                    "Helicone-Auth": "Bearer ".concat(this.helicone.heliconeToken),
+                                    "Content-Type": "application/json",
+                                },
+                            }
+                            : {
                                 headers: {
                                     Authorization: "Bearer ".concat(this.apiKey),
                                     "Content-Type": "application/json",
                                 },
-                            })];
+                            };
+                        return [4 /*yield*/, axios_1.default.post(url, __assign({ messages: messages, model: this.model }, (0, utils_1.convertKeysToSnakeCase)((_c = this.llmParams) !== null && _c !== void 0 ? _c : null)), header)];
                     case 3:
                         response = _d.sent();
                         data = response.data;
@@ -179,7 +202,7 @@ var OpenRouterModel = /** @class */ (function () {
     };
     OpenRouterModel.prototype.handleExtraction = function (_a) {
         return __awaiter(this, arguments, void 0, function (_b) {
-            var messages, response, data, err_2;
+            var messages, url, header, response, data, err_2;
             var _c;
             var _d;
             var input = _b.input, options = _b.options, schema = _b.schema;
@@ -196,15 +219,27 @@ var OpenRouterModel = /** @class */ (function () {
                             (_c.content = _e.sent(),
                                 _c)
                         ];
-                        return [4 /*yield*/, axios_1.default.post("https://openrouter.ai/api/v1/chat/completions", __assign({ messages: messages, model: this.model, response_format: {
-                                    json_schema: { name: "extraction", schema: schema },
-                                    type: "json_schema",
-                                } }, (0, utils_1.convertKeysToSnakeCase)((_d = this.llmParams) !== null && _d !== void 0 ? _d : null)), {
+                        url = this.helicone.helicone
+                            ? "https://openrouter.helicone.ai/api/v1/chat/completions"
+                            : "https://openrouter.ai/api/v1/chat/completions";
+                        header = this.helicone.helicone
+                            ? {
+                                headers: {
+                                    Authorization: "Bearer ".concat(this.apiKey),
+                                    "Helicone-Auth": "Bearer ".concat(this.helicone.heliconeToken),
+                                    "Content-Type": "application/json",
+                                },
+                            }
+                            : {
                                 headers: {
                                     Authorization: "Bearer ".concat(this.apiKey),
                                     "Content-Type": "application/json",
                                 },
-                            })];
+                            };
+                        return [4 /*yield*/, axios_1.default.post(url, __assign({ messages: messages, model: this.model, response_format: {
+                                    json_schema: { name: "extraction", schema: schema },
+                                    type: "json_schema",
+                                } }, (0, utils_1.convertKeysToSnakeCase)((_d = this.llmParams) !== null && _d !== void 0 ? _d : null)), header)];
                     case 2:
                         response = _e.sent();
                         data = response.data;

@@ -160,7 +160,12 @@ export interface GoogleLLMParams extends BaseLLMParams {
 export interface OpenAILLMParams extends BaseLLMParams {
     maxTokens: number;
 }
-export type LLMParams = AzureLLMParams | BedrockLLMParams | GoogleLLMParams | OpenAILLMParams;
+export interface OpenRouterLLMParams extends BaseLLMParams {
+    maxTokens: number;
+    helicone: boolean;
+    heliconeToken: string | null;
+}
+export type LLMParams = AzureLLMParams | BedrockLLMParams | GoogleLLMParams | OpenAILLMParams | OpenRouterLLMParams;
 export interface MessageContentArgs {
     input: string | string[];
     options?: {

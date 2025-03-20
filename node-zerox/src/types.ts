@@ -195,12 +195,19 @@ export interface OpenAILLMParams extends BaseLLMParams {
   maxTokens: number;
 }
 
+export interface OpenRouterLLMParams extends BaseLLMParams {
+  maxTokens: number;
+  helicone: boolean;
+  heliconeToken: string | null;
+}
+
 // Union type of all provider params
 export type LLMParams =
   | AzureLLMParams
   | BedrockLLMParams
   | GoogleLLMParams
-  | OpenAILLMParams;
+  | OpenAILLMParams
+  | OpenRouterLLMParams;
 
 export interface MessageContentArgs {
   input: string | string[];

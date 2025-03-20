@@ -6,7 +6,7 @@ import {
   MessageContentArgs,
   ModelInterface,
   OpenAICredentials,
-  OpenAILLMParams,
+  OpenRouterLLMParams,
   OperationMode,
 } from "../types";
 import {
@@ -21,16 +21,27 @@ import fs from "fs-extra";
 export default class OpenRouterModel implements ModelInterface {
   private apiKey: string;
   private model: string;
-  private llmParams?: Partial<OpenAILLMParams>;
+  private llmParams?: Partial<OpenRouterLLMParams>;
+  private helicone: { helicone: boolean; heliconeToken: string | null };
 
   constructor(
     credentials: OpenAICredentials,
     model: string,
-    llmParams?: Partial<OpenAILLMParams>
+    llmParams?: Partial<OpenRouterLLMParams>
   ) {
     this.apiKey = credentials.apiKey;
     this.model = model;
-    this.llmParams = llmParams;
+    this.llmParams = {
+      frequencyPenalty: llmParams?.frequencyPenalty,
+      maxTokens: llmParams?.maxTokens,
+      presencePenalty: llmParams?.presencePenalty,
+      temperature: llmParams?.temperature,
+      topP: llmParams?.topP,
+    };
+    this.helicone = {
+      helicone: llmParams?.helicone || false,
+      heliconeToken: llmParams?.heliconeToken ?? null,
+    };
   }
 
   async getCompletion(
@@ -112,19 +123,33 @@ export default class OpenRouterModel implements ModelInterface {
     });
 
     try {
+      const url = this.helicone.helicone
+        ? "https://openrouter.helicone.ai/api/v1/chat/completions"
+        : "https://openrouter.ai/api/v1/chat/completions";
+
+      const header = this.helicone.helicone
+        ? {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+              "Helicone-Auth": `Bearer ${this.helicone.heliconeToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        : {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+              "Content-Type": "application/json",
+            },
+          };
+
       const response = await axios.post(
-        "https://openrouter.ai/api/v1/chat/completions",
+        url,
         {
           messages,
           model: this.model,
           ...convertKeysToSnakeCase(this.llmParams ?? null),
         },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            "Content-Type": "application/json",
-          },
-        }
+        header
       );
 
       const data = response.data;
@@ -153,8 +178,27 @@ export default class OpenRouterModel implements ModelInterface {
         },
       ];
 
+      const url = this.helicone.helicone
+        ? "https://openrouter.helicone.ai/api/v1/chat/completions"
+        : "https://openrouter.ai/api/v1/chat/completions";
+
+      const header = this.helicone.helicone
+        ? {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+              "Helicone-Auth": `Bearer ${this.helicone.heliconeToken}`,
+              "Content-Type": "application/json",
+            },
+          }
+        : {
+            headers: {
+              Authorization: `Bearer ${this.apiKey}`,
+              "Content-Type": "application/json",
+            },
+          };
+
       const response = await axios.post(
-        "https://openrouter.ai/api/v1/chat/completions",
+        url,
         {
           messages,
           model: this.model,
@@ -164,12 +208,7 @@ export default class OpenRouterModel implements ModelInterface {
           },
           ...convertKeysToSnakeCase(this.llmParams ?? null),
         },
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            "Content-Type": "application/json",
-          },
-        }
+        header
       );
 
       const data = response.data;
