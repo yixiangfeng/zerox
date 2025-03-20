@@ -36,6 +36,9 @@ export interface ZeroxArgs {
     schema?: Record<string, unknown>;
     tempDir?: string;
     trimEdges?: boolean;
+    helicone?: {
+        token: string;
+    };
 }
 export interface ZeroxOutput {
     completionTime: number;
@@ -122,6 +125,9 @@ export interface CreateModelArgs {
     llmParams: Partial<LLMParams>;
     model: ModelOptions | string;
     provider: ModelProvider | string;
+    helicone?: {
+        token: string;
+    };
 }
 export declare enum ErrorMode {
     THROW = "THROW",
@@ -162,8 +168,6 @@ export interface OpenAILLMParams extends BaseLLMParams {
 }
 export interface OpenRouterLLMParams extends BaseLLMParams {
     maxTokens: number;
-    helicone: boolean;
-    heliconeToken: string | null;
 }
 export type LLMParams = AzureLLMParams | BedrockLLMParams | GoogleLLMParams | OpenAILLMParams | OpenRouterLLMParams;
 export interface MessageContentArgs {

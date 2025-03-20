@@ -88,8 +88,6 @@ const providerDefaultParams: Record<ModelProvider | string, LLMParams> = {
     presencePenalty: 0,
     temperature: 0,
     topP: 1,
-    helicone: false,
-    heliconeToken: null,
   },
 };
 

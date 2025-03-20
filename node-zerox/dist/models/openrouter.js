@@ -56,21 +56,11 @@ var constants_1 = require("../constants");
 var axios_1 = __importDefault(require("axios"));
 var fs_extra_1 = __importDefault(require("fs-extra"));
 var OpenRouterModel = /** @class */ (function () {
-    function OpenRouterModel(credentials, model, llmParams) {
-        var _a;
+    function OpenRouterModel(credentials, model, helicone, llmParams) {
         this.apiKey = credentials.apiKey;
         this.model = model;
-        this.llmParams = {
-            frequencyPenalty: llmParams === null || llmParams === void 0 ? void 0 : llmParams.frequencyPenalty,
-            maxTokens: llmParams === null || llmParams === void 0 ? void 0 : llmParams.maxTokens,
-            presencePenalty: llmParams === null || llmParams === void 0 ? void 0 : llmParams.presencePenalty,
-            temperature: llmParams === null || llmParams === void 0 ? void 0 : llmParams.temperature,
-            topP: llmParams === null || llmParams === void 0 ? void 0 : llmParams.topP,
-        };
-        this.helicone = {
-            helicone: (llmParams === null || llmParams === void 0 ? void 0 : llmParams.helicone) || false,
-            heliconeToken: (_a = llmParams === null || llmParams === void 0 ? void 0 : llmParams.heliconeToken) !== null && _a !== void 0 ? _a : null,
-        };
+        this.llmParams = llmParams;
+        this.helicone = helicone;
     }
     OpenRouterModel.prototype.getCompletion = function (mode, params) {
         return __awaiter(this, void 0, void 0, function () {
@@ -165,14 +155,14 @@ var OpenRouterModel = /** @class */ (function () {
                         _d.label = 2;
                     case 2:
                         _d.trys.push([2, 4, , 5]);
-                        url = this.helicone.helicone
+                        url = this.helicone
                             ? "https://openrouter.helicone.ai/api/v1/chat/completions"
                             : "https://openrouter.ai/api/v1/chat/completions";
-                        header = this.helicone.helicone
+                        header = this.helicone
                             ? {
                                 headers: {
                                     Authorization: "Bearer ".concat(this.apiKey),
-                                    "Helicone-Auth": "Bearer ".concat(this.helicone.heliconeToken),
+                                    "Helicone-Auth": "Bearer ".concat(this.helicone.token),
                                     "Content-Type": "application/json",
                                 },
                             }
@@ -219,14 +209,14 @@ var OpenRouterModel = /** @class */ (function () {
                             (_c.content = _e.sent(),
                                 _c)
                         ];
-                        url = this.helicone.helicone
+                        url = this.helicone
                             ? "https://openrouter.helicone.ai/api/v1/chat/completions"
                             : "https://openrouter.ai/api/v1/chat/completions";
-                        header = this.helicone.helicone
+                        header = this.helicone
                             ? {
                                 headers: {
                                     Authorization: "Bearer ".concat(this.apiKey),
-                                    "Helicone-Auth": "Bearer ".concat(this.helicone.heliconeToken),
+                                    "Helicone-Auth": "Bearer ".concat(this.helicone.token),
                                     "Content-Type": "application/json",
                                 },
                             }

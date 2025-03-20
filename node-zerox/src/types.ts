@@ -37,6 +37,9 @@ export interface ZeroxArgs {
   schema?: Record<string, unknown>;
   tempDir?: string;
   trimEdges?: boolean;
+  helicone?: {
+    token: string;
+  };
 }
 
 export interface ZeroxOutput {
@@ -148,6 +151,9 @@ export interface CreateModelArgs {
   llmParams: Partial<LLMParams>;
   model: ModelOptions | string;
   provider: ModelProvider | string;
+  helicone?: {
+    token: string;
+  };
 }
 
 export enum ErrorMode {
@@ -197,8 +203,6 @@ export interface OpenAILLMParams extends BaseLLMParams {
 
 export interface OpenRouterLLMParams extends BaseLLMParams {
   maxTokens: number;
-  helicone: boolean;
-  heliconeToken: string | null;
 }
 
 // Union type of all provider params

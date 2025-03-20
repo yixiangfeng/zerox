@@ -6,7 +6,7 @@ import {
   ModelInterface,
   ModelProvider,
   OpenAICredentials,
-  OpenRouterCredentials
+  OpenRouterCredentials,
 } from "../types";
 import { validateLLMParams } from "../utils/model";
 import AzureModel from "./azure";
@@ -58,6 +58,7 @@ export const createModel = ({
   llmParams,
   model,
   provider,
+  helicone,
 }: CreateModelArgs): ModelInterface => {
   const validatedParams = validateLLMParams(llmParams, provider);
 
@@ -86,7 +87,7 @@ export const createModel = ({
       if (!isOpenRouterCredentials(credentials)) {
         throw new Error("Invalid credentials for OpenRouter provider");
       }
-      return new OpenRouterModel(credentials, model, validatedParams);
+      return new OpenRouterModel(credentials, model, helicone, validatedParams);
     default:
       throw new Error(`Unsupported model provider: ${provider}`);
   }

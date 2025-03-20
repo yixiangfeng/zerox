@@ -22,26 +22,18 @@ export default class OpenRouterModel implements ModelInterface {
   private apiKey: string;
   private model: string;
   private llmParams?: Partial<OpenRouterLLMParams>;
-  private helicone: { helicone: boolean; heliconeToken: string | null };
+  private helicone?: { token: string };
 
   constructor(
     credentials: OpenAICredentials,
     model: string,
+    helicone?: { token: string },
     llmParams?: Partial<OpenRouterLLMParams>
   ) {
     this.apiKey = credentials.apiKey;
     this.model = model;
-    this.llmParams = {
-      frequencyPenalty: llmParams?.frequencyPenalty,
-      maxTokens: llmParams?.maxTokens,
-      presencePenalty: llmParams?.presencePenalty,
-      temperature: llmParams?.temperature,
-      topP: llmParams?.topP,
-    };
-    this.helicone = {
-      helicone: llmParams?.helicone || false,
-      heliconeToken: llmParams?.heliconeToken ?? null,
-    };
+    this.llmParams = llmParams;
+    this.helicone = helicone;
   }
 
   async getCompletion(
@@ -123,15 +115,15 @@ export default class OpenRouterModel implements ModelInterface {
     });
 
     try {
-      const url = this.helicone.helicone
+      const url = this.helicone
         ? "https://openrouter.helicone.ai/api/v1/chat/completions"
         : "https://openrouter.ai/api/v1/chat/completions";
 
-      const header = this.helicone.helicone
+      const header = this.helicone
         ? {
             headers: {
               Authorization: `Bearer ${this.apiKey}`,
-              "Helicone-Auth": `Bearer ${this.helicone.heliconeToken}`,
+              "Helicone-Auth": `Bearer ${this.helicone.token}`,
               "Content-Type": "application/json",
             },
           }
@@ -178,15 +170,15 @@ export default class OpenRouterModel implements ModelInterface {
         },
       ];
 
-      const url = this.helicone.helicone
+      const url = this.helicone
         ? "https://openrouter.helicone.ai/api/v1/chat/completions"
         : "https://openrouter.ai/api/v1/chat/completions";
 
-      const header = this.helicone.helicone
+      const header = this.helicone
         ? {
             headers: {
               Authorization: `Bearer ${this.apiKey}`,
-              "Helicone-Auth": `Bearer ${this.helicone.heliconeToken}`,
+              "Helicone-Auth": `Bearer ${this.helicone.token}`,
               "Content-Type": "application/json",
             },
           }

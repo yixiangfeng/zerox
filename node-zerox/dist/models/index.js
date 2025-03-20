@@ -33,7 +33,7 @@ var isOpenAICredentials = function (credentials) {
     return credentials && typeof credentials.apiKey === "string";
 };
 var createModel = function (_a) {
-    var credentials = _a.credentials, llmParams = _a.llmParams, model = _a.model, provider = _a.provider;
+    var credentials = _a.credentials, llmParams = _a.llmParams, model = _a.model, provider = _a.provider, helicone = _a.helicone;
     var validatedParams = (0, model_1.validateLLMParams)(llmParams, provider);
     switch (provider) {
         case types_1.ModelProvider.AZURE:
@@ -60,7 +60,7 @@ var createModel = function (_a) {
             if (!isOpenRouterCredentials(credentials)) {
                 throw new Error("Invalid credentials for OpenRouter provider");
             }
-            return new openrouter_1.default(credentials, model, validatedParams);
+            return new openrouter_1.default(credentials, model, helicone, validatedParams);
         default:
             throw new Error("Unsupported model provider: ".concat(provider));
     }

@@ -73,8 +73,6 @@ var providerDefaultParams = (_a = {},
         presencePenalty: 0,
         temperature: 0,
         topP: 1,
-        helicone: false,
-        heliconeToken: null,
     },
     _a);
 var validateLLMParams = function (params, provider) {
