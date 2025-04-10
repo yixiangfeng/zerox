@@ -61,7 +61,7 @@ var models_1 = require("./models");
 var types_1 = require("./types");
 var constants_1 = require("./constants");
 var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
-    var extracted, inputTokenCount, outputTokenCount, numSuccessfulOCRRequests, numFailedOCRRequests, priorPage, pages, imagePaths, startTime, scheduler, workerCount, rand, tempDirectory, sourceDirectory_1, _c, extension, localPath, imagePath, pdfPath, compressPromises, modelInstance_1, processOCR_1, i, page, limit_1, numSuccessfulExtractionRequests_1, numFailedExtractionRequests_1, extractionModelInstance_1, _d, fullDocSchema_1, perPageSchema_1, extractionTasks, processExtraction_1, inputs, input_1, results, endOfPath, rawFileName, fileName, resultFilePath, content, endTime, completionTime, formattedPages;
+    var extracted, inputTokenCount, outputTokenCount, numSuccessfulOCRRequests, numFailedOCRRequests, priorPage, pages, imagePaths, id, startTime, scheduler, workerCount, rand, tempDirectory, sourceDirectory_1, _c, extension, localPath, imagePath, pdfPath, compressPromises, modelInstance_1, processOCR_1, i, page, limit_1, numSuccessfulExtractionRequests_1, numFailedExtractionRequests_1, extractionModelInstance_1, _d, fullDocSchema_1, perPageSchema_1, extractionTasks, processExtraction_1, inputs, input_1, results, endOfPath, rawFileName, fileName, resultFilePath, content, endTime, completionTime, formattedPages;
     var _e = _b.cleanup, cleanup = _e === void 0 ? true : _e, _f = _b.concurrency, concurrency = _f === void 0 ? 10 : _f, _g = _b.correctOrientation, correctOrientation = _g === void 0 ? true : _g, _h = _b.credentials, credentials = _h === void 0 ? { apiKey: "" } : _h, customModelFunction = _b.customModelFunction, _j = _b.directImageExtraction, directImageExtraction = _j === void 0 ? false : _j, _k = _b.errorMode, errorMode = _k === void 0 ? types_1.ErrorMode.IGNORE : _k, extractionCredentials = _b.extractionCredentials, extractionLlmParams = _b.extractionLlmParams, extractionModel = _b.extractionModel, extractionModelProvider = _b.extractionModelProvider, extractionPrompt = _b.extractionPrompt, _l = _b.extractOnly, extractOnly = _l === void 0 ? false : _l, extractPerPage = _b.extractPerPage, filePath = _b.filePath, _m = _b.imageDensity, imageDensity = _m === void 0 ? 300 : _m, _o = _b.imageHeight, imageHeight = _o === void 0 ? 2048 : _o, _p = _b.llmParams, llmParams = _p === void 0 ? {} : _p, _q = _b.maintainFormat, maintainFormat = _q === void 0 ? false : _q, _r = _b.maxImageSize, maxImageSize = _r === void 0 ? 15 : _r, _s = _b.maxRetries, maxRetries = _s === void 0 ? 1 : _s, _t = _b.maxTesseractWorkers, maxTesseractWorkers = _t === void 0 ? -1 : _t, _u = _b.model, model = _u === void 0 ? types_1.ModelOptions.OPENAI_GPT_4O : _u, _v = _b.modelProvider, modelProvider = _v === void 0 ? types_1.ModelProvider.OPENAI : _v, _w = _b.openaiAPIKey, openaiAPIKey = _w === void 0 ? "" : _w, outputDir = _b.outputDir, _x = _b.pagesToConvertAsImages, pagesToConvertAsImages = _x === void 0 ? -1 : _x, prompt = _b.prompt, schema = _b.schema, _y = _b.tempDir, tempDir = _y === void 0 ? os_1.default.tmpdir() : _y, _z = _b.trimEdges, trimEdges = _z === void 0 ? true : _z;
     return __generator(this, function (_0) {
         switch (_0.label) {
@@ -74,6 +74,7 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                 priorPage = "";
                 pages = [];
                 imagePaths = [];
+                id = undefined;
                 startTime = new Date();
                 if (openaiAPIKey && openaiAPIKey.length > 0) {
                     modelProvider = types_1.ModelProvider.OPENAI;
@@ -265,6 +266,8 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                 rawResponse = _a.sent();
                                 _a.label = 7;
                             case 7:
+                                id = rawResponse.id;
+                                delete rawResponse.id;
                                 response = utils_1.CompletionProcessor.process(types_1.OperationMode.OCR, rawResponse);
                                 inputTokenCount += response.inputTokens;
                                 outputTokenCount += response.outputTokens;
@@ -356,6 +359,8 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                                     })];
                                                 case 1:
                                                     rawResponse = _c.sent();
+                                                    id = rawResponse.id;
+                                                    delete rawResponse.id;
                                                     response = utils_1.CompletionProcessor.process(types_1.OperationMode.EXTRACTION, rawResponse);
                                                     inputTokenCount += response.inputTokens;
                                                     outputTokenCount += response.outputTokens;
@@ -422,6 +427,8 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                                         })];
                                                     case 1:
                                                         rawResponse = _a.sent();
+                                                        id = rawResponse.id;
+                                                        delete rawResponse.id;
                                                         response = utils_1.CompletionProcessor.process(types_1.OperationMode.EXTRACTION, rawResponse);
                                                         inputTokenCount += response.inputTokens;
                                                         outputTokenCount += response.outputTokens;
@@ -506,6 +513,7 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                     return result;
                 });
                 return [2 /*return*/, {
+                        id: id,
                         completionTime: completionTime,
                         extracted: extracted,
                         fileName: fileName,

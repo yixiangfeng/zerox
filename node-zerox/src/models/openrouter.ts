@@ -133,6 +133,7 @@ export default class OpenRouterModel implements ModelInterface {
         content: data.choices[0].message.content,
         inputTokens: data.usage.prompt_tokens,
         outputTokens: data.usage.completion_tokens,
+        id: data.id,
       };
     } catch (err) {
       console.error("Error in OpenAI completion", err);
@@ -178,6 +179,7 @@ export default class OpenRouterModel implements ModelInterface {
         extracted: data.choices[0].message.content,
         inputTokens: data.usage.prompt_tokens,
         outputTokens: data.usage.completion_tokens,
+        id: data.id,
       };
     } catch (err) {
       console.error("Error in OpenAI completion", err);

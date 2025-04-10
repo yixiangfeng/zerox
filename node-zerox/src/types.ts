@@ -40,6 +40,7 @@ export interface ZeroxArgs {
 }
 
 export interface ZeroxOutput {
+  id?: string;
   completionTime: number;
   extracted: Record<string, unknown> | null;
   fileName: string;
@@ -141,6 +142,7 @@ export interface CompletionResponse {
   content: string;
   inputTokens: number;
   outputTokens: number;
+  id?: string;
 }
 
 export interface CreateModelArgs {
@@ -170,6 +172,7 @@ export interface ExtractionResponse {
   extracted: Record<string, unknown>;
   inputTokens: number;
   outputTokens: number;
+  id?: string;
 }
 
 interface BaseLLMParams {

@@ -79,6 +79,7 @@ export const zerox = async ({
   let priorPage: string = "";
   let pages: Page[] = [];
   let imagePaths: string[] = [];
+  let id: string | undefined = undefined;
   const startTime = new Date();
 
   if (openaiAPIKey && openaiAPIKey.length > 0) {
@@ -265,6 +266,8 @@ export const zerox = async ({
                 pageNumber
               );
             }
+            id = rawResponse.id;
+            delete rawResponse.id;
             const response = CompletionProcessor.process(
               OperationMode.OCR,
               rawResponse
@@ -362,6 +365,8 @@ export const zerox = async ({
                   schema,
                 }
               );
+              id = rawResponse.id;
+              delete rawResponse.id;
               const response = CompletionProcessor.process(
                 OperationMode.EXTRACTION,
                 rawResponse
@@ -432,6 +437,8 @@ export const zerox = async ({
                         schema: fullDocSchema,
                       }
                     );
+                  id = rawResponse.id;
+                  delete rawResponse.id;
                   const response = CompletionProcessor.process(
                     OperationMode.EXTRACTION,
                     rawResponse
@@ -517,6 +524,7 @@ export const zerox = async ({
     });
 
     return {
+      id,
       completionTime,
       extracted,
       fileName,

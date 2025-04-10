@@ -38,6 +38,7 @@ export interface ZeroxArgs {
     trimEdges?: boolean;
 }
 export interface ZeroxOutput {
+    id?: string;
     completionTime: number;
     extracted: Record<string, unknown> | null;
     fileName: string;
@@ -116,6 +117,7 @@ export interface CompletionResponse {
     content: string;
     inputTokens: number;
     outputTokens: number;
+    id?: string;
 }
 export interface CreateModelArgs {
     credentials: ModelCredentials;
@@ -141,6 +143,7 @@ export interface ExtractionResponse {
     extracted: Record<string, unknown>;
     inputTokens: number;
     outputTokens: number;
+    id?: string;
 }
 interface BaseLLMParams {
     frequencyPenalty?: number;

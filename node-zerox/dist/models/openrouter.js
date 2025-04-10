@@ -167,6 +167,7 @@ var OpenRouterModel = /** @class */ (function () {
                                 content: data.choices[0].message.content,
                                 inputTokens: data.usage.prompt_tokens,
                                 outputTokens: data.usage.completion_tokens,
+                                id: data.id,
                             }];
                     case 4:
                         err_1 = _d.sent();
@@ -212,6 +213,7 @@ var OpenRouterModel = /** @class */ (function () {
                                 extracted: data.choices[0].message.content,
                                 inputTokens: data.usage.prompt_tokens,
                                 outputTokens: data.usage.completion_tokens,
+                                id: data.id,
                             }];
                     case 3:
                         err_2 = _e.sent();
