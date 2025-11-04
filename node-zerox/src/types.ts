@@ -44,6 +44,7 @@ export interface ZeroxArgs {
 }
 
 export interface ZeroxOutput {
+  id?: string;
   completionTime: number;
   extracted: Record<string, unknown> | null;
   fileName: string;
@@ -74,11 +75,16 @@ export interface OpenAICredentials {
   apiKey: string;
 }
 
+export interface OpenRouterCredentials {
+  apiKey: string;
+}
+
 export type ModelCredentials =
   | AzureCredentials
   | BedrockCredentials
   | GoogleCredentials
-  | OpenAICredentials;
+  | OpenAICredentials
+  | OpenRouterCredentials;
 
 export enum ModelOptions {
   // Bedrock Claude 3 Models
@@ -109,6 +115,7 @@ export enum ModelProvider {
   BEDROCK = "BEDROCK",
   GOOGLE = "GOOGLE",
   OPENAI = "OPENAI",
+  OPEN_ROUTER = "OPEN_ROUTER",
 }
 
 export enum OperationMode {
@@ -153,6 +160,7 @@ export interface CompletionResponse {
   inputTokens: number;
   logprobs?: ChatCompletionTokenLogprob[] | null;
   outputTokens: number;
+  id?: string;
 }
 
 export type ProcessedCompletionResponse = Omit<
@@ -190,6 +198,7 @@ export interface ExtractionResponse {
   inputTokens: number;
   logprobs?: ChatCompletionTokenLogprob[] | null;
   outputTokens: number;
+  id?: string;
 }
 
 export type ProcessedExtractionResponse = Omit<ExtractionResponse, "logprobs">;

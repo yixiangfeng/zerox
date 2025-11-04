@@ -6,7 +6,7 @@
 node_modules/
 
 # Ignore output directories
-dist/
+# dist/
 lib-cov/
 coverage/
 .nyc_output/
@@ -36,7 +36,7 @@ __pycache__/
 dev_scripts
 build/
 develop-eggs/
-dist/
+# dist/
 downloads/
 eggs/
 .eggs/

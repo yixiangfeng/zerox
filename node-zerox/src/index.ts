@@ -88,6 +88,7 @@ export const zerox = async ({
   let priorPage: string = "";
   let pages: Page[] = [];
   let imagePaths: string[] = [];
+  let id: string | undefined = undefined;
   const startTime = new Date();
 
   if (openaiAPIKey && openaiAPIKey.length > 0) {
@@ -575,6 +576,7 @@ export const zerox = async ({
     const completionTime = endTime.getTime() - startTime.getTime();
 
     return {
+      id,
       completionTime,
       extracted,
       fileName,
