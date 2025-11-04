@@ -39,8 +39,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.compressImage = exports.cleanupImage = exports.encodeImageToBase64 = void 0;
+exports.splitTallImage = exports.compressImage = exports.cleanupImage = exports.encodeImageToBase64 = void 0;
 var sharp_1 = __importDefault(require("sharp"));
+var constants_1 = require("../constants");
 var encodeImageToBase64 = function (imageBuffer) {
     return imageBuffer.toString("base64");
 };
@@ -70,7 +71,8 @@ var cleanupImage = function (_a) { return __awaiter(void 0, [_a], void 0, functi
             case 2: return [4 /*yield*/, image.toBuffer()];
             case 3:
                 correctedBuffer = _c.sent();
-                return [2 /*return*/, correctedBuffer];
+                return [4 /*yield*/, (0, exports.splitTallImage)(correctedBuffer)];
+            case 4: return [2 /*return*/, _c.sent()];
         }
     });
 }); };
@@ -140,3 +142,112 @@ var compressImage = function (image, maxSize) { return __awaiter(void 0, void 0,
     });
 }); };
 exports.compressImage = compressImage;
+var splitTallImage = function (imageBuffer) { return __awaiter(void 0, void 0, void 0, function () {
+    var image, metadata, height, width, aspectRatio, imageData, emptySpaces, y, emptyPixels, x, pixelIndex, emptyRatio, significantEmptySpaces, currentEmptyStart, y, emptyHeight, emptyHeight, numSections, approxSectionHeight, splitPoints, _loop_1, i;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                image = (0, sharp_1.default)(imageBuffer);
+                return [4 /*yield*/, image.metadata()];
+            case 1:
+                metadata = _a.sent();
+                height = metadata.height || 0;
+                width = metadata.width || 0;
+                aspectRatio = height / width;
+                if (!(aspectRatio <= constants_1.ASPECT_RATIO_THRESHOLD)) return [3 /*break*/, 3];
+                return [4 /*yield*/, image.toBuffer()];
+            case 2: return [2 /*return*/, [_a.sent()]];
+            case 3: return [4 /*yield*/, image
+                    .grayscale()
+                    .raw()
+                    .toBuffer({ resolveWithObject: true })];
+            case 4:
+                imageData = (_a.sent()).data;
+                emptySpaces = new Array(height).fill(0);
+                // Analyze each row to find empty spaces
+                for (y = 0; y < height; y++) {
+                    emptyPixels = 0;
+                    for (x = 0; x < width; x++) {
+                        pixelIndex = y * width + x;
+                        if (imageData[pixelIndex] > 230) {
+                            emptyPixels++;
+                        }
+                    }
+                    emptyRatio = emptyPixels / width;
+                    // Mark rows that are mostly empty (whitespace)
+                    emptySpaces[y] = emptyRatio > 0.95 ? 1 : 0;
+                }
+                significantEmptySpaces = [];
+                currentEmptyStart = -1;
+                for (y = 0; y < height; y++) {
+                    if (emptySpaces[y] === 1) {
+                        if (currentEmptyStart === -1) {
+                            currentEmptyStart = y;
+                        }
+                    }
+                    else {
+                        if (currentEmptyStart !== -1) {
+                            emptyHeight = y - currentEmptyStart;
+                            if (emptyHeight >= 5) {
+                                // Minimum height for a significant empty space
+                                significantEmptySpaces.push({
+                                    center: Math.floor(currentEmptyStart + emptyHeight / 2),
+                                    end: y - 1,
+                                    height: emptyHeight,
+                                    start: currentEmptyStart,
+                                });
+                            }
+                            currentEmptyStart = -1;
+                        }
+                    }
+                }
+                // Handle if there's an empty space at the end
+                if (currentEmptyStart !== -1) {
+                    emptyHeight = height - currentEmptyStart;
+                    if (emptyHeight >= 5) {
+                        significantEmptySpaces.push({
+                            center: Math.floor(currentEmptyStart + emptyHeight / 2),
+                            end: height - 1,
+                            height: emptyHeight,
+                            start: currentEmptyStart,
+                        });
+                    }
+                }
+                numSections = Math.ceil(aspectRatio);
+                approxSectionHeight = Math.floor(height / numSections);
+                splitPoints = [0];
+                _loop_1 = function (i) {
+                    var targetY = i * approxSectionHeight;
+                    // Find empty spaces near the target position
+                    var searchRadius = Math.min(150, approxSectionHeight / 3);
+                    var nearbyEmptySpaces = significantEmptySpaces.filter(function (space) {
+                        return Math.abs(space.center - targetY) < searchRadius &&
+                            space.start > splitPoints[splitPoints.length - 1] + 50;
+                    });
+                    if (nearbyEmptySpaces.length > 0) {
+                        // Sort by proximity to target
+                        nearbyEmptySpaces.sort(function (a, b) { return Math.abs(a.center - targetY) - Math.abs(b.center - targetY); });
+                        // Choose center of the best empty space
+                        splitPoints.push(nearbyEmptySpaces[0].center);
+                    }
+                    else {
+                        // Fallback if no good empty spaces found
+                        var minY = splitPoints[splitPoints.length - 1] + 50;
+                        var maxY = Math.min(height - 50, targetY + searchRadius);
+                        splitPoints.push(Math.max(minY, Math.min(maxY, targetY)));
+                    }
+                };
+                for (i = 1; i < numSections; i++) {
+                    _loop_1(i);
+                }
+                splitPoints.push(height);
+                return [2 /*return*/, Promise.all(splitPoints.slice(0, -1).map(function (top, i) {
+                        var sectionHeight = splitPoints[i + 1] - top;
+                        return (0, sharp_1.default)(imageBuffer)
+                            .extract({ left: 0, top: top, width: width, height: sectionHeight })
+                            .toBuffer();
+                    }))];
+        }
+    });
+}); };
+exports.splitTallImage = splitTallImage;

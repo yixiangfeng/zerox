@@ -11,12 +11,15 @@ var ModelOptions;
     ModelOptions["BEDROCK_CLAUDE_3_OPUS_2024_02"] = "anthropic.claude-3-opus-20240229-v1:0";
     ModelOptions["BEDROCK_CLAUDE_3_SONNET_2024_02"] = "anthropic.claude-3-sonnet-20240229-v1:0";
     // OpenAI GPT-4 Models
+    ModelOptions["OPENAI_GPT_4_1"] = "gpt-4.1";
+    ModelOptions["OPENAI_GPT_4_1_MINI"] = "gpt-4.1-mini";
     ModelOptions["OPENAI_GPT_4O"] = "gpt-4o";
     ModelOptions["OPENAI_GPT_4O_MINI"] = "gpt-4o-mini";
     // Google Gemini Models
     ModelOptions["GOOGLE_GEMINI_1_5_FLASH"] = "gemini-1.5-flash";
     ModelOptions["GOOGLE_GEMINI_1_5_FLASH_8B"] = "gemini-1.5-flash-8b";
     ModelOptions["GOOGLE_GEMINI_1_5_PRO"] = "gemini-1.5-pro";
+    ModelOptions["GOOGLE_GEMINI_2_5_PRO"] = "gemini-2.5-pro-preview-03-25";
     ModelOptions["GOOGLE_GEMINI_2_FLASH"] = "gemini-2.0-flash-001";
     ModelOptions["GOOGLE_GEMINI_2_FLASH_LITE"] = "gemini-2.0-flash-lite-preview-02-05";
 })(ModelOptions || (exports.ModelOptions = ModelOptions = {}));

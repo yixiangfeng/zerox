@@ -61,16 +61,18 @@ var models_1 = require("./models");
 var types_1 = require("./types");
 var constants_1 = require("./constants");
 var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
-    var extracted, inputTokenCount, outputTokenCount, numSuccessfulOCRRequests, numFailedOCRRequests, priorPage, pages, imagePaths, id, startTime, scheduler, workerCount, rand, tempDirectory, sourceDirectory_1, _c, extension, localPath, imagePath, pdfPath, compressPromises, modelInstance_1, processOCR_1, i, page, limit_1, numSuccessfulExtractionRequests_1, numFailedExtractionRequests_1, extractionModelInstance_1, _d, fullDocSchema_1, perPageSchema_1, extractionTasks, processExtraction_1, inputs, input_1, results, endOfPath, rawFileName, fileName, resultFilePath, content, endTime, completionTime, formattedPages;
-    var _e = _b.cleanup, cleanup = _e === void 0 ? true : _e, _f = _b.concurrency, concurrency = _f === void 0 ? 10 : _f, _g = _b.correctOrientation, correctOrientation = _g === void 0 ? true : _g, _h = _b.credentials, credentials = _h === void 0 ? { apiKey: "" } : _h, customModelFunction = _b.customModelFunction, _j = _b.directImageExtraction, directImageExtraction = _j === void 0 ? false : _j, _k = _b.errorMode, errorMode = _k === void 0 ? types_1.ErrorMode.IGNORE : _k, extractionCredentials = _b.extractionCredentials, extractionLlmParams = _b.extractionLlmParams, extractionModel = _b.extractionModel, extractionModelProvider = _b.extractionModelProvider, extractionPrompt = _b.extractionPrompt, _l = _b.extractOnly, extractOnly = _l === void 0 ? false : _l, extractPerPage = _b.extractPerPage, filePath = _b.filePath, _m = _b.imageDensity, imageDensity = _m === void 0 ? 300 : _m, _o = _b.imageHeight, imageHeight = _o === void 0 ? 2048 : _o, _p = _b.llmParams, llmParams = _p === void 0 ? {} : _p, _q = _b.maintainFormat, maintainFormat = _q === void 0 ? false : _q, _r = _b.maxImageSize, maxImageSize = _r === void 0 ? 15 : _r, _s = _b.maxRetries, maxRetries = _s === void 0 ? 1 : _s, _t = _b.maxTesseractWorkers, maxTesseractWorkers = _t === void 0 ? -1 : _t, _u = _b.model, model = _u === void 0 ? types_1.ModelOptions.OPENAI_GPT_4O : _u, _v = _b.modelProvider, modelProvider = _v === void 0 ? types_1.ModelProvider.OPENAI : _v, _w = _b.openaiAPIKey, openaiAPIKey = _w === void 0 ? "" : _w, outputDir = _b.outputDir, _x = _b.pagesToConvertAsImages, pagesToConvertAsImages = _x === void 0 ? -1 : _x, prompt = _b.prompt, schema = _b.schema, _y = _b.tempDir, tempDir = _y === void 0 ? os_1.default.tmpdir() : _y, _z = _b.trimEdges, trimEdges = _z === void 0 ? true : _z;
+    var extracted, extractedLogprobs, inputTokenCount, outputTokenCount, numSuccessfulOCRRequests, numFailedOCRRequests, ocrLogprobs, priorPage, pages, imagePaths, id, startTime, scheduler, workerCount, rand, tempDirectory, sourceDirectory_1, _c, extension, localPath, imagePath, pdfPath, isCFBFile, isPdf, totalPages_1, compressPromises, modelInstance_1, processOCR_1, i, page, limit_1, numSuccessfulExtractionRequests_1, numFailedExtractionRequests_1, extractionModelInstance_1, _d, fullDocSchema_1, perPageSchema_1, extractionTasks, processExtraction_1, inputs, input_1, results, endOfPath, rawFileName, fileName, resultFilePath, content, endTime, completionTime;
+    var _e = _b.cleanup, cleanup = _e === void 0 ? true : _e, _f = _b.concurrency, concurrency = _f === void 0 ? 10 : _f, _g = _b.correctOrientation, correctOrientation = _g === void 0 ? true : _g, _h = _b.credentials, credentials = _h === void 0 ? { apiKey: "" } : _h, customModelFunction = _b.customModelFunction, _j = _b.directImageExtraction, directImageExtraction = _j === void 0 ? false : _j, _k = _b.enableHybridExtraction, enableHybridExtraction = _k === void 0 ? false : _k, _l = _b.errorMode, errorMode = _l === void 0 ? types_1.ErrorMode.IGNORE : _l, extractionCredentials = _b.extractionCredentials, extractionLlmParams = _b.extractionLlmParams, extractionModel = _b.extractionModel, extractionModelProvider = _b.extractionModelProvider, extractionPrompt = _b.extractionPrompt, _m = _b.extractOnly, extractOnly = _m === void 0 ? false : _m, extractPerPage = _b.extractPerPage, filePath = _b.filePath, imageDensity = _b.imageDensity, _o = _b.imageFormat, imageFormat = _o === void 0 ? "png" : _o, imageHeight = _b.imageHeight, _p = _b.llmParams, llmParams = _p === void 0 ? {} : _p, _q = _b.maintainFormat, maintainFormat = _q === void 0 ? false : _q, _r = _b.maxImageSize, maxImageSize = _r === void 0 ? 15 : _r, _s = _b.maxRetries, maxRetries = _s === void 0 ? 1 : _s, _t = _b.maxTesseractWorkers, maxTesseractWorkers = _t === void 0 ? -1 : _t, _u = _b.model, model = _u === void 0 ? types_1.ModelOptions.OPENAI_GPT_4O : _u, _v = _b.modelProvider, modelProvider = _v === void 0 ? types_1.ModelProvider.OPENAI : _v, _w = _b.openaiAPIKey, openaiAPIKey = _w === void 0 ? "" : _w, outputDir = _b.outputDir, _x = _b.pagesToConvertAsImages, pagesToConvertAsImages = _x === void 0 ? -1 : _x, prompt = _b.prompt, schema = _b.schema, _y = _b.tempDir, tempDir = _y === void 0 ? os_1.default.tmpdir() : _y, _z = _b.trimEdges, trimEdges = _z === void 0 ? true : _z;
     return __generator(this, function (_0) {
         switch (_0.label) {
             case 0:
                 extracted = null;
+                extractedLogprobs = [];
                 inputTokenCount = 0;
                 outputTokenCount = 0;
                 numSuccessfulOCRRequests = 0;
                 numFailedOCRRequests = 0;
+                ocrLogprobs = [];
                 priorPage = "";
                 pages = [];
                 imagePaths = [];
@@ -90,6 +92,12 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                 }
                 if (!filePath || !filePath.length) {
                     throw new Error("Missing file path");
+                }
+                if (enableHybridExtraction && (directImageExtraction || extractOnly)) {
+                    throw new Error("Hybrid extraction cannot be used in direct image extraction or extract-only mode");
+                }
+                if (enableHybridExtraction && !schema) {
+                    throw new Error("Schema is required when hybrid extraction is enabled");
                 }
                 if (extractOnly && !schema) {
                     throw new Error("Schema is required for extraction mode");
@@ -115,7 +123,7 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                 _0.sent();
                 _0.label = 3;
             case 3:
-                _0.trys.push([3, , 33, 34]);
+                _0.trys.push([3, , 37, 38]);
                 rand = Math.floor(1000 + Math.random() * 9000).toString();
                 tempDirectory = path_1.default.join(tempDir || os_1.default.tmpdir(), "zerox-temp-".concat(rand));
                 sourceDirectory_1 = path_1.default.join(tempDirectory, "source");
@@ -139,13 +147,13 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                 return [4 /*yield*/, (0, utils_1.extractPagesFromStructuredDataFile)(localPath)];
             case 6:
                 pages = _0.sent();
-                return [3 /*break*/, 26];
+                return [3 /*break*/, 30];
             case 7:
                 if (!(extension === ".png" ||
                     extension === ".jpg" ||
                     extension === ".jpeg")) return [3 /*break*/, 8];
                 imagePaths = [localPath];
-                return [3 /*break*/, 15];
+                return [3 /*break*/, 19];
             case 8:
                 if (!(extension === ".heic")) return [3 /*break*/, 10];
                 return [4 /*yield*/, (0, utils_1.convertHeicToJpeg)({
@@ -155,33 +163,50 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
             case 9:
                 imagePath = _0.sent();
                 imagePaths = [imagePath];
-                return [3 /*break*/, 15];
+                return [3 /*break*/, 19];
             case 10:
                 pdfPath = void 0;
-                if (!(extension === ".pdf")) return [3 /*break*/, 11];
+                return [4 /*yield*/, (0, utils_1.checkIsCFBFile)(localPath)];
+            case 11:
+                isCFBFile = _0.sent();
+                return [4 /*yield*/, (0, utils_1.checkIsPdfFile)(localPath)];
+            case 12:
+                isPdf = _0.sent();
+                if (!((extension === ".pdf" || isPdf) && !isCFBFile)) return [3 /*break*/, 13];
                 pdfPath = localPath;
-                return [3 /*break*/, 13];
-            case 11: return [4 /*yield*/, (0, utils_1.convertFileToPdf)({
+                return [3 /*break*/, 15];
+            case 13: return [4 /*yield*/, (0, utils_1.convertFileToPdf)({
                     extension: extension,
                     localPath: localPath,
                     tempDir: sourceDirectory_1,
                 })];
-            case 12:
+            case 14:
                 // Convert file to PDF if necessary
                 pdfPath = _0.sent();
-                _0.label = 13;
-            case 13: return [4 /*yield*/, (0, utils_1.convertPdfToImages)({
-                    pdfPath: pdfPath,
-                    imageDensity: imageDensity,
-                    imageHeight: imageHeight,
-                    pagesToConvertAsImages: pagesToConvertAsImages,
-                    tempDir: sourceDirectory_1,
-                })];
-            case 14:
-                imagePaths = _0.sent();
                 _0.label = 15;
             case 15:
-                if (!(maxImageSize && maxImageSize > 0)) return [3 /*break*/, 17];
+                if (!(pagesToConvertAsImages !== -1)) return [3 /*break*/, 17];
+                return [4 /*yield*/, (0, utils_1.getNumberOfPagesFromPdf)({ pdfPath: pdfPath })];
+            case 16:
+                totalPages_1 = _0.sent();
+                pagesToConvertAsImages = Array.isArray(pagesToConvertAsImages)
+                    ? pagesToConvertAsImages
+                    : [pagesToConvertAsImages];
+                pagesToConvertAsImages = pagesToConvertAsImages.filter(function (page) { return page > 0 && page <= totalPages_1; });
+                _0.label = 17;
+            case 17: return [4 /*yield*/, (0, utils_1.convertPdfToImages)({
+                    imageDensity: imageDensity,
+                    imageFormat: imageFormat,
+                    imageHeight: imageHeight,
+                    pagesToConvertAsImages: pagesToConvertAsImages,
+                    pdfPath: pdfPath,
+                    tempDir: sourceDirectory_1,
+                })];
+            case 18:
+                imagePaths = _0.sent();
+                _0.label = 19;
+            case 19:
+                if (!(maxImageSize && maxImageSize > 0)) return [3 /*break*/, 21];
                 compressPromises = imagePaths.map(function (imagePath) { return __awaiter(void 0, void 0, void 0, function () {
                     var imageBuffer, compressedBuffer, originalName, compressedPath;
                     return __generator(this, function (_a) {
@@ -202,32 +227,45 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                     });
                 }); });
                 return [4 /*yield*/, Promise.all(compressPromises)];
-            case 16:
+            case 20:
                 imagePaths = _0.sent();
-                _0.label = 17;
-            case 17:
-                if (!correctOrientation) return [3 /*break*/, 19];
+                _0.label = 21;
+            case 21:
+                if (!correctOrientation) return [3 /*break*/, 23];
                 return [4 /*yield*/, (0, utils_1.prepareWorkersForImageProcessing)({
                         maxTesseractWorkers: maxTesseractWorkers,
                         numImages: imagePaths.length,
                         scheduler: scheduler,
                     })];
-            case 18:
+            case 22:
                 _0.sent();
-                _0.label = 19;
-            case 19:
+                _0.label = 23;
+            case 23:
                 modelInstance_1 = (0, models_1.createModel)({
                     credentials: credentials,
                     llmParams: llmParams,
                     model: model,
                     provider: modelProvider,
                 });
-                if (!!extractOnly) return [3 /*break*/, 26];
-                processOCR_1 = function (imagePath, pageNumber, maintainFormat) { return __awaiter(void 0, void 0, void 0, function () {
-                    var imageBuffer, correctedBuffer, page, rawResponse, response, error_1;
+                if (!!extractOnly) return [3 /*break*/, 30];
+                processOCR_1 = function (imagePath, pageIndex, maintainFormat) { return __awaiter(void 0, void 0, void 0, function () {
+                    var pageNumber, imageBuffer, buffers, page, rawResponse, response, error_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, fs_extra_1.default.readFile(imagePath)];
+                            case 0:
+                                // If we convert all pages, just use the array index
+                                if (pagesToConvertAsImages === -1) {
+                                    pageNumber = pageIndex + 1;
+                                }
+                                // Else if we convert specific pages, use the page number from the parameter
+                                else if (Array.isArray(pagesToConvertAsImages)) {
+                                    pageNumber = pagesToConvertAsImages[pageIndex];
+                                }
+                                // Else, the parameter is a number and use it for the page number
+                                else {
+                                    pageNumber = pagesToConvertAsImages;
+                                }
+                                return [4 /*yield*/, fs_extra_1.default.readFile(imagePath)];
                             case 1:
                                 imageBuffer = _a.sent();
                                 return [4 /*yield*/, (0, utils_1.cleanupImage)({
@@ -237,7 +275,7 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                         trimEdges: trimEdges,
                                     })];
                             case 2:
-                                correctedBuffer = _a.sent();
+                                buffers = _a.sent();
                                 _a.label = 3;
                             case 3:
                                 _a.trys.push([3, 8, , 9]);
@@ -245,9 +283,10 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                 if (!customModelFunction) return [3 /*break*/, 5];
                                 return [4 /*yield*/, (0, utils_1.runRetries)(function () {
                                         return customModelFunction({
-                                            buffer: correctedBuffer,
+                                            buffers: buffers,
                                             image: imagePath,
                                             maintainFormat: maintainFormat,
+                                            pageNumber: pageNumber,
                                             priorPage: priorPage,
                                         });
                                     }, maxRetries, pageNumber)];
@@ -256,7 +295,7 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                 return [3 /*break*/, 7];
                             case 5: return [4 /*yield*/, (0, utils_1.runRetries)(function () {
                                     return modelInstance_1.getCompletion(types_1.OperationMode.OCR, {
-                                        image: correctedBuffer,
+                                        buffers: buffers,
                                         maintainFormat: maintainFormat,
                                         priorPage: priorPage,
                                         prompt: prompt,
@@ -266,8 +305,12 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                 rawResponse = _a.sent();
                                 _a.label = 7;
                             case 7:
-                                id = rawResponse.id;
-                                delete rawResponse.id;
+                                if (rawResponse.logprobs) {
+                                    ocrLogprobs.push({
+                                        page: pageNumber,
+                                        value: rawResponse.logprobs,
+                                    });
+                                }
                                 response = utils_1.CompletionProcessor.process(types_1.OperationMode.OCR, rawResponse);
                                 inputTokenCount += response.inputTokens;
                                 outputTokenCount += response.outputTokens;
@@ -296,39 +339,39 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                         }
                     });
                 }); };
-                if (!maintainFormat) return [3 /*break*/, 24];
+                if (!maintainFormat) return [3 /*break*/, 28];
                 i = 0;
-                _0.label = 20;
-            case 20:
-                if (!(i < imagePaths.length)) return [3 /*break*/, 23];
-                return [4 /*yield*/, processOCR_1(imagePaths[i], i + 1, true)];
-            case 21:
+                _0.label = 24;
+            case 24:
+                if (!(i < imagePaths.length)) return [3 /*break*/, 27];
+                return [4 /*yield*/, processOCR_1(imagePaths[i], i, true)];
+            case 25:
                 page = _0.sent();
                 pages.push(page);
                 if (page.status === types_1.PageStatus.ERROR) {
-                    return [3 /*break*/, 23];
+                    return [3 /*break*/, 27];
                 }
-                _0.label = 22;
-            case 22:
+                _0.label = 26;
+            case 26:
                 i++;
-                return [3 /*break*/, 20];
-            case 23: return [3 /*break*/, 26];
-            case 24:
+                return [3 /*break*/, 24];
+            case 27: return [3 /*break*/, 30];
+            case 28:
                 limit_1 = (0, p_limit_1.default)(concurrency);
                 return [4 /*yield*/, Promise.all(imagePaths.map(function (imagePath, i) {
                         return limit_1(function () {
-                            return processOCR_1(imagePath, i + 1, false).then(function (page) {
+                            return processOCR_1(imagePath, i, false).then(function (page) {
                                 pages[i] = page;
                             });
                         });
                     }))];
-            case 25:
+            case 29:
                 _0.sent();
-                _0.label = 26;
-            case 26:
+                _0.label = 30;
+            case 30:
                 numSuccessfulExtractionRequests_1 = 0;
                 numFailedExtractionRequests_1 = 0;
-                if (!schema) return [3 /*break*/, 28];
+                if (!schema) return [3 /*break*/, 32];
                 extractionModelInstance_1 = (0, models_1.createModel)({
                     credentials: extractionCredentials,
                     llmParams: extractionLlmParams,
@@ -359,8 +402,12 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                                     })];
                                                 case 1:
                                                     rawResponse = _c.sent();
-                                                    id = rawResponse.id;
-                                                    delete rawResponse.id;
+                                                    if (rawResponse.logprobs) {
+                                                        extractedLogprobs.push({
+                                                            page: pageNumber,
+                                                            value: rawResponse.logprobs,
+                                                        });
+                                                    }
                                                     response = utils_1.CompletionProcessor.process(types_1.OperationMode.EXTRACTION, rawResponse);
                                                     inputTokenCount += response.inputTokens;
                                                     outputTokenCount += response.outputTokens;
@@ -393,7 +440,12 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                 if (perPageSchema_1) {
                     inputs = directImageExtraction && !(0, utils_1.isStructuredDataFile)(localPath)
                         ? imagePaths.map(function (imagePath) { return [imagePath]; })
-                        : pages.map(function (page) { return page.content || ""; });
+                        : enableHybridExtraction
+                            ? imagePaths.map(function (imagePath, index) { return ({
+                                imagePaths: [imagePath],
+                                text: pages[index].content || "",
+                            }); })
+                            : pages.map(function (page) { return page.content || ""; });
                     extractionTasks.push.apply(extractionTasks, inputs.map(function (input, i) {
                         return processExtraction_1(input, i + 1, perPageSchema_1);
                     }));
@@ -401,11 +453,20 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                 if (fullDocSchema_1) {
                     input_1 = directImageExtraction && !(0, utils_1.isStructuredDataFile)(localPath)
                         ? imagePaths
-                        : pages
-                            .map(function (page, i) {
-                            return i === 0 ? page.content : "\n<hr><hr>\n" + page.content;
-                        })
-                            .join("");
+                        : enableHybridExtraction
+                            ? {
+                                imagePaths: imagePaths,
+                                text: pages
+                                    .map(function (page, i) {
+                                    return i === 0 ? page.content : "\n<hr><hr>\n" + page.content;
+                                })
+                                    .join(""),
+                            }
+                            : pages
+                                .map(function (page, i) {
+                                return i === 0 ? page.content : "\n<hr><hr>\n" + page.content;
+                            })
+                                .join("");
                     extractionTasks.push((function () { return __awaiter(void 0, void 0, void 0, function () {
                         var result, error_3;
                         return __generator(this, function (_a) {
@@ -427,8 +488,12 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                                         })];
                                                     case 1:
                                                         rawResponse = _a.sent();
-                                                        id = rawResponse.id;
-                                                        delete rawResponse.id;
+                                                        if (rawResponse.logprobs) {
+                                                            extractedLogprobs.push({
+                                                                page: null,
+                                                                value: rawResponse.logprobs,
+                                                            });
+                                                        }
                                                         response = utils_1.CompletionProcessor.process(types_1.OperationMode.EXTRACTION, rawResponse);
                                                         inputTokenCount += response.inputTokens;
                                                         outputTokenCount += response.outputTokens;
@@ -451,7 +516,7 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                     }); })());
                 }
                 return [4 /*yield*/, Promise.all(extractionTasks)];
-            case 27:
+            case 31:
                 results = _0.sent();
                 extracted = results.reduce(function (acc, result) {
                     Object.entries(result || {}).forEach(function (_a) {
@@ -469,8 +534,8 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                     });
                     return acc;
                 }, {});
-                _0.label = 28;
-            case 28:
+                _0.label = 32;
+            case 32:
                 endOfPath = localPath.split("/")[localPath.split("/").length - 1];
                 rawFileName = endOfPath.split(".")[0];
                 fileName = rawFileName
@@ -478,49 +543,30 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                     .replace(/\s+/g, "_")
                     .toLowerCase()
                     .substring(0, 255);
-                if (!outputDir) return [3 /*break*/, 30];
+                if (!outputDir) return [3 /*break*/, 34];
                 resultFilePath = path_1.default.join(outputDir, "".concat(fileName, ".md"));
                 content = pages.map(function (page) { return page.content; }).join("\n\n");
                 return [4 /*yield*/, fs_extra_1.default.writeFile(resultFilePath, content)];
-            case 29:
+            case 33:
                 _0.sent();
-                _0.label = 30;
-            case 30:
-                if (!cleanup) return [3 /*break*/, 32];
+                _0.label = 34;
+            case 34:
+                if (!cleanup) return [3 /*break*/, 36];
                 return [4 /*yield*/, fs_extra_1.default.remove(tempDirectory)];
-            case 31:
+            case 35:
                 _0.sent();
-                _0.label = 32;
-            case 32:
+                _0.label = 36;
+            case 36:
                 endTime = new Date();
                 completionTime = endTime.getTime() - startTime.getTime();
-                formattedPages = pages.map(function (page, i) {
-                    var correctPageNumber;
-                    // If we convert all pages, just use the array index
-                    if (pagesToConvertAsImages === -1) {
-                        correctPageNumber = i + 1;
-                    }
-                    // Else if we convert specific pages, use the page number from the parameter
-                    else if (Array.isArray(pagesToConvertAsImages)) {
-                        correctPageNumber = pagesToConvertAsImages[i];
-                    }
-                    // Else, the parameter is a number and use it for the page number
-                    else {
-                        correctPageNumber = pagesToConvertAsImages;
-                    }
-                    // Return the page with the correct page number
-                    var result = __assign(__assign({}, page), { page: correctPageNumber });
-                    return result;
-                });
-                return [2 /*return*/, {
-                        id: id,
-                        completionTime: completionTime,
-                        extracted: extracted,
-                        fileName: fileName,
-                        inputTokens: inputTokenCount,
-                        outputTokens: outputTokenCount,
-                        pages: formattedPages,
-                        summary: {
+                return [2 /*return*/, __assign(__assign({ id: id, completionTime: completionTime, extracted: extracted, fileName: fileName, inputTokens: inputTokenCount }, (ocrLogprobs.length || extractedLogprobs.length
+                        ? {
+                            logprobs: {
+                                ocr: !extractOnly ? ocrLogprobs : null,
+                                extracted: schema ? extractedLogprobs : null,
+                            },
+                        }
+                        : {})), { outputTokens: outputTokenCount, pages: pages, summary: {
                             totalPages: pages.length,
                             ocr: !extractOnly
                                 ? {
@@ -534,14 +580,13 @@ var zerox = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b)
                                     failed: numFailedExtractionRequests_1,
                                 }
                                 : null,
-                        },
-                    }];
-            case 33:
+                        } })];
+            case 37:
                 if (correctOrientation && scheduler) {
                     (0, utils_1.terminateScheduler)(scheduler);
                 }
                 return [7 /*endfinally*/];
-            case 34: return [2 /*return*/];
+            case 38: return [2 /*return*/];
         }
     });
 }); };

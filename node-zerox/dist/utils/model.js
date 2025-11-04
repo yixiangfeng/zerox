@@ -10,6 +10,17 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateLLMParams = exports.CompletionProcessor = exports.isCompletionResponse = void 0;
@@ -27,15 +38,16 @@ var CompletionProcessor = /** @class */ (function () {
     }
     CompletionProcessor.process = function (mode, response) {
         var _a;
+        var logprobs = response.logprobs, responseWithoutLogprobs = __rest(response, ["logprobs"]);
         if ((0, exports.isCompletionResponse)(mode, response)) {
             var content = response.content;
-            return __assign(__assign({}, response), { content: typeof content === "string" ? (0, common_1.formatMarkdown)(content) : content, contentLength: ((_a = response.content) === null || _a === void 0 ? void 0 : _a.length) || 0 });
+            return __assign(__assign({}, responseWithoutLogprobs), { content: typeof content === "string" ? (0, common_1.formatMarkdown)(content) : content, contentLength: ((_a = response.content) === null || _a === void 0 ? void 0 : _a.length) || 0 });
         }
         if (isExtractionResponse(mode, response)) {
             var extracted = response.extracted;
-            return __assign(__assign({}, response), { extracted: typeof extracted === "object" ? extracted : JSON.parse(extracted) });
+            return __assign(__assign({}, responseWithoutLogprobs), { extracted: typeof extracted === "object" ? extracted : JSON.parse(extracted) });
         }
-        return response;
+        return responseWithoutLogprobs;
     };
     return CompletionProcessor;
 }());
@@ -43,6 +55,7 @@ exports.CompletionProcessor = CompletionProcessor;
 var providerDefaultParams = (_a = {},
     _a[types_1.ModelProvider.AZURE] = {
         frequencyPenalty: 0,
+        logprobs: false,
         maxTokens: 4000,
         presencePenalty: 0,
         temperature: 0,
@@ -62,6 +75,7 @@ var providerDefaultParams = (_a = {},
     },
     _a[types_1.ModelProvider.OPENAI] = {
         frequencyPenalty: 0,
+        logprobs: false,
         maxTokens: 4000,
         presencePenalty: 0,
         temperature: 0,
@@ -80,14 +94,15 @@ var validateLLMParams = function (params, provider) {
     if (!defaultParams) {
         throw new Error("Unsupported model provider: ".concat(provider));
     }
-    var validKeys = Object.keys(defaultParams);
-    for (var _i = 0, _a = Object.keys(params); _i < _a.length; _i++) {
-        var key = _a[_i];
-        if (!validKeys.includes(key)) {
-            throw new Error("Invalid LLM parameter for ".concat(provider, ": ").concat(key, ". Valid parameters are: ").concat(validKeys.join(", ")));
+    var validKeys = new Set(Object.keys(defaultParams));
+    for (var _i = 0, _a = Object.entries(params); _i < _a.length; _i++) {
+        var _b = _a[_i], key = _b[0], value = _b[1];
+        if (!validKeys.has(key)) {
+            throw new Error("Invalid LLM parameter for ".concat(provider, ": ").concat(key, ". Valid parameters are: ").concat(Array.from(validKeys).join(", ")));
         }
-        if (typeof params[key] !== "number") {
-            throw new Error("Value for '".concat(key, "' must be a number"));
+        var expectedType = typeof defaultParams[key];
+        if (typeof value !== expectedType) {
+            throw new Error("Value for '".concat(key, "' must be a ").concat(expectedType));
         }
     }
     return __assign(__assign({}, defaultParams), params);

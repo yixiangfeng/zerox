@@ -36,11 +36,27 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.splitSchema = exports.runRetries = exports.formatMarkdown = exports.isValidUrl = exports.isString = exports.convertKeysToSnakeCase = exports.camelToSnakeCase = void 0;
+exports.splitSchema = exports.snakeToCamelCase = exports.runRetries = exports.formatMarkdown = exports.isValidUrl = exports.isString = exports.convertKeysToSnakeCase = exports.convertKeysToCamelCase = exports.camelToSnakeCase = void 0;
 var camelToSnakeCase = function (str) {
     return str.replace(/[A-Z]/g, function (letter) { return "_".concat(letter.toLowerCase()); });
 };
 exports.camelToSnakeCase = camelToSnakeCase;
+var convertKeysToCamelCase = function (obj) {
+    if (typeof obj !== "object" || obj === null) {
+        return obj !== null && obj !== void 0 ? obj : {};
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(exports.convertKeysToCamelCase);
+    }
+    return Object.fromEntries(Object.entries(obj).map(function (_a) {
+        var key = _a[0], value = _a[1];
+        return [
+            (0, exports.snakeToCamelCase)(key),
+            (0, exports.convertKeysToCamelCase)(value),
+        ];
+    }));
+};
+exports.convertKeysToCamelCase = convertKeysToCamelCase;
 var convertKeysToSnakeCase = function (obj) {
     if (typeof obj !== "object" || obj === null) {
         return obj !== null && obj !== void 0 ? obj : {};
@@ -105,6 +121,10 @@ var runRetries = function (operation, maxRetries, pageNumber) { return __awaiter
     });
 }); };
 exports.runRetries = runRetries;
+var snakeToCamelCase = function (str) {
+    return str.replace(/_([a-z])/g, function (_, letter) { return letter.toUpperCase(); });
+};
+exports.snakeToCamelCase = snakeToCamelCase;
 var splitSchema = function (schema, extractPerPage) {
     if (!(extractPerPage === null || extractPerPage === void 0 ? void 0 : extractPerPage.length)) {
         return { fullDocSchema: schema, perPageSchema: null };

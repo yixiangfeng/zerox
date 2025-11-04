@@ -39,21 +39,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractPagesFromStructuredDataFile = exports.isStructuredDataFile = exports.isExcelFile = exports.convertExcelToHtml = exports.convertPdfToImages = exports.convertFileToPdf = exports.convertHeicToJpeg = exports.downloadFile = void 0;
+exports.isStructuredDataFile = exports.isExcelFile = exports.getNumberOfPagesFromPdf = exports.extractPagesFromStructuredDataFile = exports.convertExcelToHtml = exports.convertPdfToImages = exports.convertFileToPdf = exports.convertHeicToJpeg = exports.checkIsPdfFile = exports.checkIsCFBFile = exports.downloadFile = void 0;
+var libreoffice_convert_1 = require("libreoffice-convert");
+var child_process_1 = require("child_process");
 var pdf2pic_1 = require("pdf2pic");
 var promises_1 = require("stream/promises");
-var axios_1 = __importDefault(require("axios"));
-var fs_extra_1 = __importDefault(require("fs-extra"));
-var mime_types_1 = __importDefault(require("mime-types"));
-var path_1 = __importDefault(require("path"));
 var util_1 = require("util");
 var uuid_1 = require("uuid");
-var libreoffice_convert_1 = require("libreoffice-convert");
+var axios_1 = __importDefault(require("axios"));
+var file_type_1 = __importDefault(require("file-type"));
+var fs_extra_1 = __importDefault(require("fs-extra"));
 var heic_convert_1 = __importDefault(require("heic-convert"));
+var mime_types_1 = __importDefault(require("mime-types"));
+var path_1 = __importDefault(require("path"));
+var pdf_parse_1 = __importDefault(require("pdf-parse"));
+var util_2 = __importDefault(require("util"));
 var xlsx_1 = __importDefault(require("xlsx"));
-var common_1 = require("./common");
+var constants_1 = require("../constants");
 var types_1 = require("../types");
+var common_1 = require("./common");
 var convertAsync = (0, util_1.promisify)(libreoffice_convert_1.convert);
+var execAsync = util_2.default.promisify(child_process_1.exec);
 // Save file to local tmp directory
 var downloadFile = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
     var fileNameExt, localPath, mimetype, writer, response, extension;
@@ -92,7 +98,10 @@ var downloadFile = function (_a) { return __awaiter(void 0, [_a], void 0, functi
                 if (!mimetype) {
                     mimetype = mime_types_1.default.lookup(localPath);
                 }
-                extension = mime_types_1.default.extension(mimetype) || "";
+                extension = mime_types_1.default.extension(mimetype);
+                if (!extension) {
+                    extension = fileNameExt || "";
+                }
                 if (!extension) {
                     if (mimetype === "binary/octet-stream") {
                         extension = ".bin";
@@ -109,6 +118,32 @@ var downloadFile = function (_a) { return __awaiter(void 0, [_a], void 0, functi
     });
 }); };
 exports.downloadFile = downloadFile;
+// Check if file is a Compound File Binary (legacy Office format)
+var checkIsCFBFile = function (filePath) { return __awaiter(void 0, void 0, void 0, function () {
+    var type;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, file_type_1.default.fromFile(filePath)];
+            case 1:
+                type = _a.sent();
+                return [2 /*return*/, (type === null || type === void 0 ? void 0 : type.mime) === "application/x-cfb"];
+        }
+    });
+}); };
+exports.checkIsCFBFile = checkIsCFBFile;
+// Check if file is a PDF by inspecting its magic number ("%PDF" at the beginning)
+var checkIsPdfFile = function (filePath) { return __awaiter(void 0, void 0, void 0, function () {
+    var buffer;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, fs_extra_1.default.readFile(filePath)];
+            case 1:
+                buffer = _a.sent();
+                return [2 /*return*/, buffer.subarray(0, 4).toString() === "%PDF"];
+        }
+    });
+}); };
+exports.checkIsPdfFile = checkIsPdfFile;
 // Convert HEIC file to JPEG
 var convertHeicToJpeg = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
     var inputBuffer, outputBuffer, jpegPath, err_1;
@@ -173,39 +208,52 @@ var convertFileToPdf = function (_a) { return __awaiter(void 0, [_a], void 0, fu
 exports.convertFileToPdf = convertFileToPdf;
 // Convert each page to a png and save that image to tempDir
 var convertPdfToImages = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
-    var options, storeAsImage, convertResults, imagePaths_1, err_3;
-    var _c = _b.imageDensity, imageDensity = _c === void 0 ? 300 : _c, _d = _b.imageHeight, imageHeight = _d === void 0 ? 2048 : _d, pdfPath = _b.pdfPath, pagesToConvertAsImages = _b.pagesToConvertAsImages, tempDir = _b.tempDir;
-    return __generator(this, function (_e) {
-        switch (_e.label) {
-            case 0:
+    var aspectRatio, shouldAdjustHeight, adjustedHeight, options, storeAsImage, convertResults, err_3, err_4;
+    var _c = _b.imageDensity, imageDensity = _c === void 0 ? 300 : _c, _d = _b.imageFormat, imageFormat = _d === void 0 ? "png" : _d, _e = _b.imageHeight, imageHeight = _e === void 0 ? 2048 : _e, pagesToConvertAsImages = _b.pagesToConvertAsImages, pdfPath = _b.pdfPath, tempDir = _b.tempDir;
+    return __generator(this, function (_f) {
+        switch (_f.label) {
+            case 0: return [4 /*yield*/, getPdfAspectRatio(pdfPath)];
+            case 1:
+                aspectRatio = (_f.sent()) || 1;
+                shouldAdjustHeight = aspectRatio > constants_1.ASPECT_RATIO_THRESHOLD;
+                adjustedHeight = shouldAdjustHeight
+                    ? Math.max(imageHeight, Math.round(aspectRatio * imageHeight))
+                    : imageHeight;
                 options = {
                     density: imageDensity,
-                    format: "png",
-                    height: imageHeight,
+                    format: imageFormat,
+                    height: adjustedHeight,
                     preserveAspectRatio: true,
                     saveFilename: path_1.default.basename(pdfPath, path_1.default.extname(pdfPath)),
                     savePath: tempDir,
                 };
-                storeAsImage = (0, pdf2pic_1.fromPath)(pdfPath, options);
-                _e.label = 1;
-            case 1:
-                _e.trys.push([1, 3, , 4]);
-                return [4 /*yield*/, storeAsImage.bulk(pagesToConvertAsImages)];
+                _f.label = 2;
             case 2:
-                convertResults = _e.sent();
-                imagePaths_1 = [];
-                convertResults.forEach(function (result) {
-                    if (!result.page || !result.path) {
-                        throw new Error("Could not identify page data");
-                    }
-                    imagePaths_1.push(result.path);
-                });
-                return [2 /*return*/, imagePaths_1];
+                _f.trys.push([2, 8, , 9]);
+                _f.label = 3;
             case 3:
-                err_3 = _e.sent();
-                console.error("Error during PDF conversion:", err_3);
-                throw err_3;
-            case 4: return [2 /*return*/];
+                _f.trys.push([3, 5, , 7]);
+                storeAsImage = (0, pdf2pic_1.fromPath)(pdfPath, options);
+                return [4 /*yield*/, storeAsImage.bulk(pagesToConvertAsImages)];
+            case 4:
+                convertResults = _f.sent();
+                // Validate that all pages were converted
+                return [2 /*return*/, convertResults.map(function (result) {
+                        if (!result.page || !result.path) {
+                            throw new Error("Could not identify page data");
+                        }
+                        return result.path;
+                    })];
+            case 5:
+                err_3 = _f.sent();
+                return [4 /*yield*/, convertPdfWithPoppler(pagesToConvertAsImages, pdfPath, options)];
+            case 6: return [2 /*return*/, _f.sent()];
+            case 7: return [3 /*break*/, 9];
+            case 8:
+                err_4 = _f.sent();
+                console.error("Error during PDF conversion:", err_4);
+                throw err_4;
+            case 9: return [2 /*return*/];
         }
     });
 }); };
@@ -275,20 +323,56 @@ var convertExcelToHtml = function (filePath) { return __awaiter(void 0, void 0, 
     });
 }); };
 exports.convertExcelToHtml = convertExcelToHtml;
-// Checks if a file is an Excel file
-var isExcelFile = function (filePath) {
-    var extension = path_1.default.extname(filePath).toLowerCase();
-    return (extension === ".xlsx" ||
-        extension === ".xls" ||
-        extension === ".xlsm" ||
-        extension === ".xlsb");
-};
-exports.isExcelFile = isExcelFile;
-// Checks if a file is a structured data file (like Excel)
-var isStructuredDataFile = function (filePath) {
-    return (0, exports.isExcelFile)(filePath);
-};
-exports.isStructuredDataFile = isStructuredDataFile;
+// Alternative PDF to PNG conversion using Poppler
+var convertPdfWithPoppler = function (pagesToConvertAsImages, pdfPath, options) { return __awaiter(void 0, void 0, void 0, function () {
+    var density, format, height, saveFilename, savePath, outputPrefix, run, convertResults;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                density = options.density, format = options.format, height = options.height, saveFilename = options.saveFilename, savePath = options.savePath;
+                outputPrefix = path_1.default.join(savePath, saveFilename);
+                run = function (from, to) { return __awaiter(void 0, void 0, void 0, function () {
+                    var pageArgs, cmd;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                pageArgs = from && to ? "-f ".concat(from, " -l ").concat(to) : "";
+                                cmd = "pdftoppm -".concat(format, " -r ").concat(density, " -scale-to-y ").concat(height, " -scale-to-x -1 ").concat(pageArgs, " \"").concat(pdfPath, "\" \"").concat(outputPrefix, "\"");
+                                return [4 /*yield*/, execAsync(cmd)];
+                            case 1:
+                                _a.sent();
+                                return [2 /*return*/];
+                        }
+                    });
+                }); };
+                if (!(pagesToConvertAsImages === -1)) return [3 /*break*/, 2];
+                return [4 /*yield*/, run()];
+            case 1:
+                _a.sent();
+                return [3 /*break*/, 6];
+            case 2:
+                if (!(typeof pagesToConvertAsImages === "number")) return [3 /*break*/, 4];
+                return [4 /*yield*/, run(pagesToConvertAsImages, pagesToConvertAsImages)];
+            case 3:
+                _a.sent();
+                return [3 /*break*/, 6];
+            case 4:
+                if (!Array.isArray(pagesToConvertAsImages)) return [3 /*break*/, 6];
+                return [4 /*yield*/, Promise.all(pagesToConvertAsImages.map(function (page) { return run(page, page); }))];
+            case 5:
+                _a.sent();
+                _a.label = 6;
+            case 6: return [4 /*yield*/, fs_extra_1.default.readdir(savePath)];
+            case 7:
+                convertResults = _a.sent();
+                return [2 /*return*/, convertResults
+                        .filter(function (result) {
+                        return result.startsWith(saveFilename) && result.endsWith(".".concat(format));
+                    })
+                        .map(function (result) { return path_1.default.join(savePath, result); })];
+        }
+    });
+}); };
 // Extracts pages from a structured data file (like Excel)
 var extractPagesFromStructuredDataFile = function (filePath) { return __awaiter(void 0, void 0, void 0, function () {
     var sheets, pages_1;
@@ -314,3 +398,52 @@ var extractPagesFromStructuredDataFile = function (filePath) { return __awaiter(
     });
 }); };
 exports.extractPagesFromStructuredDataFile = extractPagesFromStructuredDataFile;
+// Gets the number of pages from a PDF
+var getNumberOfPagesFromPdf = function (_a) { return __awaiter(void 0, [_a], void 0, function (_b) {
+    var dataBuffer, data;
+    var pdfPath = _b.pdfPath;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0: return [4 /*yield*/, fs_extra_1.default.readFile(pdfPath)];
+            case 1:
+                dataBuffer = _c.sent();
+                return [4 /*yield*/, (0, pdf_parse_1.default)(dataBuffer)];
+            case 2:
+                data = _c.sent();
+                return [2 /*return*/, data.numpages];
+        }
+    });
+}); };
+exports.getNumberOfPagesFromPdf = getNumberOfPagesFromPdf;
+// Gets the aspect ratio (height/width) of a PDF
+var getPdfAspectRatio = function (pdfPath) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        return [2 /*return*/, new Promise(function (resolve) {
+                (0, child_process_1.exec)("pdfinfo \"".concat(pdfPath, "\""), function (error, stdout) {
+                    if (error)
+                        return resolve(undefined);
+                    var sizeMatch = stdout.match(/Page size:\s+([\d.]+)\s+x\s+([\d.]+)/);
+                    if (sizeMatch) {
+                        var height = parseFloat(sizeMatch[2]);
+                        var width = parseFloat(sizeMatch[1]);
+                        return resolve(height / width);
+                    }
+                    resolve(undefined);
+                });
+            })];
+    });
+}); };
+// Checks if a file is an Excel file
+var isExcelFile = function (filePath) {
+    var extension = path_1.default.extname(filePath).toLowerCase();
+    return (extension === ".xlsx" ||
+        extension === ".xls" ||
+        extension === ".xlsm" ||
+        extension === ".xlsb");
+};
+exports.isExcelFile = isExcelFile;
+// Checks if a file is a structured data file (like Excel)
+var isStructuredDataFile = function (filePath) {
+    return (0, exports.isExcelFile)(filePath);
+};
+exports.isStructuredDataFile = isStructuredDataFile;

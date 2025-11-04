@@ -1,3 +1,4 @@
+import { ChatCompletionTokenLogprob } from "openai/resources";
 import Tesseract from "tesseract.js";
 export interface ZeroxArgs {
     cleanup?: boolean;
@@ -5,12 +6,14 @@ export interface ZeroxArgs {
     correctOrientation?: boolean;
     credentials?: ModelCredentials;
     customModelFunction?: (params: {
-        buffer: Buffer;
+        buffers: Buffer[];
         image: string;
         maintainFormat: boolean;
+        pageNumber: number;
         priorPage: string;
     }) => Promise<CompletionResponse>;
     directImageExtraction?: boolean;
+    enableHybridExtraction?: boolean;
     errorMode?: ErrorMode;
     extractionCredentials?: ModelCredentials;
     extractionLlmParams?: Partial<LLMParams>;
@@ -22,6 +25,7 @@ export interface ZeroxArgs {
     filePath: string;
     imageDensity?: number;
     imageHeight?: number;
+    imageFormat?: "png" | "jpeg";
     llmParams?: Partial<LLMParams>;
     maintainFormat?: boolean;
     maxImageSize?: number;
@@ -43,6 +47,7 @@ export interface ZeroxOutput {
     extracted: Record<string, unknown> | null;
     fileName: string;
     inputTokens: number;
+    logprobs?: Logprobs;
     outputTokens: number;
     pages: Page[];
     summary: Summary;
@@ -74,11 +79,14 @@ export declare enum ModelOptions {
     BEDROCK_CLAUDE_3_HAIKU_2024_03 = "anthropic.claude-3-haiku-20240307-v1:0",
     BEDROCK_CLAUDE_3_OPUS_2024_02 = "anthropic.claude-3-opus-20240229-v1:0",
     BEDROCK_CLAUDE_3_SONNET_2024_02 = "anthropic.claude-3-sonnet-20240229-v1:0",
+    OPENAI_GPT_4_1 = "gpt-4.1",
+    OPENAI_GPT_4_1_MINI = "gpt-4.1-mini",
     OPENAI_GPT_4O = "gpt-4o",
     OPENAI_GPT_4O_MINI = "gpt-4o-mini",
     GOOGLE_GEMINI_1_5_FLASH = "gemini-1.5-flash",
     GOOGLE_GEMINI_1_5_FLASH_8B = "gemini-1.5-flash-8b",
     GOOGLE_GEMINI_1_5_PRO = "gemini-1.5-pro",
+    GOOGLE_GEMINI_2_5_PRO = "gemini-2.5-pro-preview-03-25",
     GOOGLE_GEMINI_2_FLASH = "gemini-2.0-flash-001",
     GOOGLE_GEMINI_2_FLASH_LITE = "gemini-2.0-flash-lite-preview-02-05"
 }
@@ -107,8 +115,16 @@ export interface Page {
     page: number;
     status: PageStatus;
 }
+export interface ConvertPdfOptions {
+    density: number;
+    format: "png" | "jpeg";
+    height: number;
+    preserveAspectRatio?: boolean;
+    saveFilename: string;
+    savePath: string;
+}
 export interface CompletionArgs {
-    image: Buffer;
+    buffers: Buffer[];
     maintainFormat: boolean;
     priorPage: string;
     prompt?: string;
@@ -116,9 +132,13 @@ export interface CompletionArgs {
 export interface CompletionResponse {
     content: string;
     inputTokens: number;
+    logprobs?: ChatCompletionTokenLogprob[] | null;
     outputTokens: number;
     id?: string;
 }
+export type ProcessedCompletionResponse = Omit<CompletionResponse, "logprobs"> & {
+    contentLength: number;
+};
 export interface CreateModelArgs {
     credentials: ModelCredentials;
     llmParams: Partial<LLMParams>;
@@ -130,7 +150,7 @@ export declare enum ErrorMode {
     IGNORE = "IGNORE"
 }
 export interface ExtractionArgs {
-    input: string | string[];
+    input: string | string[] | HybridInput;
     options?: {
         correctOrientation?: boolean;
         scheduler: Tesseract.Scheduler | null;
@@ -142,8 +162,14 @@ export interface ExtractionArgs {
 export interface ExtractionResponse {
     extracted: Record<string, unknown>;
     inputTokens: number;
+    logprobs?: ChatCompletionTokenLogprob[] | null;
     outputTokens: number;
     id?: string;
+}
+export type ProcessedExtractionResponse = Omit<ExtractionResponse, "logprobs">;
+export interface HybridInput {
+    imagePaths: string[];
+    text: string;
 }
 interface BaseLLMParams {
     frequencyPenalty?: number;
@@ -152,6 +178,7 @@ interface BaseLLMParams {
     topP?: number;
 }
 export interface AzureLLMParams extends BaseLLMParams {
+    logprobs: boolean;
     maxTokens: number;
 }
 export interface BedrockLLMParams extends BaseLLMParams {
@@ -161,11 +188,20 @@ export interface GoogleLLMParams extends BaseLLMParams {
     maxOutputTokens: number;
 }
 export interface OpenAILLMParams extends BaseLLMParams {
+    logprobs: boolean;
     maxTokens: number;
 }
 export type LLMParams = AzureLLMParams | BedrockLLMParams | GoogleLLMParams | OpenAILLMParams;
+export interface LogprobPage {
+    page: number | null;
+    value: ChatCompletionTokenLogprob[];
+}
+interface Logprobs {
+    ocr: LogprobPage[] | null;
+    extracted: LogprobPage[] | null;
+}
 export interface MessageContentArgs {
-    input: string | string[];
+    input: string | string[] | HybridInput;
     options?: {
         correctOrientation?: boolean;
         scheduler: Tesseract.Scheduler | null;
@@ -187,8 +223,8 @@ export interface Summary {
     } | null;
 }
 export interface ExcelSheetContent {
-    sheetName: string;
     content: string;
     contentLength: number;
+    sheetName: string;
 }
 export {};

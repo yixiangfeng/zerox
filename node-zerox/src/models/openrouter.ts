@@ -11,6 +11,7 @@ import {
 } from "../types";
 import {
   cleanupImage,
+  convertKeysToCamelCase,
   convertKeysToSnakeCase,
   encodeImageToBase64,
 } from "../utils";
@@ -18,7 +19,7 @@ import { CONSISTENCY_PROMPT, SYSTEM_PROMPT_BASE } from "../constants";
 import axios from "axios";
 import fs from "fs-extra";
 
-export default class OpenRouterModel implements ModelInterface {
+export default class OpenAIModel implements ModelInterface {
   private apiKey: string;
   private model: string;
   private llmParams?: Partial<OpenAILLMParams>;
@@ -55,37 +56,47 @@ export default class OpenRouterModel implements ModelInterface {
     input,
     options,
   }: MessageContentArgs): Promise<any> {
-    if (Array.isArray(input)) {
-      return Promise.all(
-        input.map(async (imagePath) => {
+    const processImages = async (imagePaths: string[]) => {
+      const nestedImages = await Promise.all(
+        imagePaths.map(async (imagePath) => {
           const imageBuffer = await fs.readFile(imagePath);
-          const correctedBuffer = await cleanupImage({
+          const buffers = await cleanupImage({
             correctOrientation: options?.correctOrientation ?? false,
             imageBuffer,
             scheduler: options?.scheduler ?? null,
             trimEdges: options?.trimEdges ?? false,
           });
-          return {
+          return buffers.map((buffer) => ({
             image_url: {
-              url: `data:image/png;base64,${encodeImageToBase64(
-                correctedBuffer
-              )}`,
+              url: `data:image/png;base64,${encodeImageToBase64(buffer)}`,
             },
             type: "image_url",
-          };
+          }));
         })
       );
+      return nestedImages.flat();
+    };
+
+    if (Array.isArray(input)) {
+      return processImages(input);
     }
 
-    return [{ text: input, type: "text" }];
+    if (typeof input === "string") {
+      return [{ text: input, type: "text" }];
+    }
+
+    const { imagePaths, text } = input;
+    const images = await processImages(imagePaths);
+    return [...images, { text, type: "text" }];
   }
 
   private async handleOCR({
-    image,
+    buffers,
     maintainFormat,
     priorPage,
+    prompt,
   }: CompletionArgs): Promise<CompletionResponse> {
-    const systemPrompt = SYSTEM_PROMPT_BASE;
+    const systemPrompt = prompt || SYSTEM_PROMPT_BASE;
 
     // Default system message
     const messages: any = [{ role: "system", content: systemPrompt }];
@@ -100,16 +111,13 @@ export default class OpenRouterModel implements ModelInterface {
     }
 
     // Add image to request
-    const base64Image = await encodeImageToBase64(image);
-    messages.push({
-      role: "user",
-      content: [
-        {
-          type: "image_url",
-          image_url: { url: `data:image/png;base64,${base64Image}` },
-        },
-      ],
-    });
+    const imageContents = buffers.map((buffer) => ({
+      type: "image_url",
+      image_url: {
+        url: `data:image/png;base64,${encodeImageToBase64(buffer)}`,
+      },
+    }));
+    messages.push({ role: "user", content: imageContents });
 
     try {
       const response = await axios.post(
@@ -129,12 +137,19 @@ export default class OpenRouterModel implements ModelInterface {
 
       const data = response.data;
 
-      return {
+      const result: CompletionResponse = {
         content: data.choices[0].message.content,
         inputTokens: data.usage.prompt_tokens,
         outputTokens: data.usage.completion_tokens,
-        id: data.id,
       };
+
+      if (this.llmParams?.logprobs) {
+        result["logprobs"] = convertKeysToCamelCase(
+          data.choices[0].logprobs
+        )?.content;
+      }
+
+      return result;
     } catch (err) {
       console.error("Error in OpenAI completion", err);
       throw err;
@@ -144,15 +159,20 @@ export default class OpenRouterModel implements ModelInterface {
   private async handleExtraction({
     input,
     options,
+    prompt,
     schema,
   }: ExtractionArgs): Promise<ExtractionResponse> {
     try {
-      const messages: any = [
-        {
-          role: "user",
-          content: await this.createMessageContent({ input, options }),
-        },
-      ];
+      const messages: any = [];
+
+      if (prompt) {
+        messages.push({ role: "system", content: prompt });
+      }
+
+      messages.push({
+        role: "user",
+        content: await this.createMessageContent({ input, options }),
+      });
 
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
@@ -175,14 +195,21 @@ export default class OpenRouterModel implements ModelInterface {
 
       const data = response.data;
 
-      return {
+      const result: ExtractionResponse = {
         extracted: data.choices[0].message.content,
         inputTokens: data.usage.prompt_tokens,
         outputTokens: data.usage.completion_tokens,
-        id: data.id,
       };
+
+      if (this.llmParams?.logprobs) {
+        result["logprobs"] = convertKeysToCamelCase(
+          data.choices[0].logprobs
+        )?.content;
+      }
+
+      return result;
     } catch (err) {
-      console.error("Error in OpenAI completion", err);
+      console.error("Error in Open router completion", err);
       throw err;
     }
   }

@@ -46,6 +46,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -97,47 +106,70 @@ var BedrockModel = /** @class */ (function () {
     };
     BedrockModel.prototype.createMessageContent = function (_a) {
         return __awaiter(this, arguments, void 0, function (_b) {
+            var processImages, imagePaths, text, images;
             var _this = this;
             var input = _b.input, options = _b.options;
             return __generator(this, function (_c) {
-                if (Array.isArray(input)) {
-                    return [2 /*return*/, Promise.all(input.map(function (imagePath) { return __awaiter(_this, void 0, void 0, function () {
-                            var imageBuffer, correctedBuffer;
-                            var _a, _b, _c;
-                            return __generator(this, function (_d) {
-                                switch (_d.label) {
-                                    case 0: return [4 /*yield*/, fs_extra_1.default.readFile(imagePath)];
+                switch (_c.label) {
+                    case 0:
+                        processImages = function (imagePaths) { return __awaiter(_this, void 0, void 0, function () {
+                            var nestedImages;
+                            var _this = this;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, Promise.all(imagePaths.map(function (imagePath) { return __awaiter(_this, void 0, void 0, function () {
+                                            var imageBuffer, buffers;
+                                            var _a, _b, _c;
+                                            return __generator(this, function (_d) {
+                                                switch (_d.label) {
+                                                    case 0: return [4 /*yield*/, fs_extra_1.default.readFile(imagePath)];
+                                                    case 1:
+                                                        imageBuffer = _d.sent();
+                                                        return [4 /*yield*/, (0, utils_1.cleanupImage)({
+                                                                correctOrientation: (_a = options === null || options === void 0 ? void 0 : options.correctOrientation) !== null && _a !== void 0 ? _a : false,
+                                                                imageBuffer: imageBuffer,
+                                                                scheduler: (_b = options === null || options === void 0 ? void 0 : options.scheduler) !== null && _b !== void 0 ? _b : null,
+                                                                trimEdges: (_c = options === null || options === void 0 ? void 0 : options.trimEdges) !== null && _c !== void 0 ? _c : false,
+                                                            })];
+                                                    case 2:
+                                                        buffers = _d.sent();
+                                                        return [2 /*return*/, buffers.map(function (buffer) { return ({
+                                                                source: {
+                                                                    data: (0, utils_1.encodeImageToBase64)(buffer),
+                                                                    media_type: "image/png",
+                                                                    type: "base64",
+                                                                },
+                                                                type: "image",
+                                                            }); })];
+                                                }
+                                            });
+                                        }); }))];
                                     case 1:
-                                        imageBuffer = _d.sent();
-                                        return [4 /*yield*/, (0, utils_1.cleanupImage)({
-                                                correctOrientation: (_a = options === null || options === void 0 ? void 0 : options.correctOrientation) !== null && _a !== void 0 ? _a : false,
-                                                imageBuffer: imageBuffer,
-                                                scheduler: (_b = options === null || options === void 0 ? void 0 : options.scheduler) !== null && _b !== void 0 ? _b : null,
-                                                trimEdges: (_c = options === null || options === void 0 ? void 0 : options.trimEdges) !== null && _c !== void 0 ? _c : false,
-                                            })];
-                                    case 2:
-                                        correctedBuffer = _d.sent();
-                                        return [2 /*return*/, {
-                                                source: {
-                                                    data: (0, utils_1.encodeImageToBase64)(correctedBuffer),
-                                                    media_type: "image/png",
-                                                    type: "base64",
-                                                },
-                                                type: "image",
-                                            }];
+                                        nestedImages = _a.sent();
+                                        return [2 /*return*/, nestedImages.flat()];
                                 }
                             });
-                        }); }))];
+                        }); };
+                        if (Array.isArray(input)) {
+                            return [2 /*return*/, processImages(input)];
+                        }
+                        if (typeof input === "string") {
+                            return [2 /*return*/, [{ text: input, type: "text" }]];
+                        }
+                        imagePaths = input.imagePaths, text = input.text;
+                        return [4 /*yield*/, processImages(imagePaths)];
+                    case 1:
+                        images = _c.sent();
+                        return [2 /*return*/, __spreadArray(__spreadArray([], images, true), [{ text: text, type: "text" }], false)];
                 }
-                return [2 /*return*/, [{ text: input, type: "text" }]];
             });
         });
     };
     BedrockModel.prototype.handleOCR = function (_a) {
         return __awaiter(this, arguments, void 0, function (_b) {
-            var systemPrompt, messages, base64Image, body, command, response, parsedResponse, err_1;
+            var systemPrompt, messages, imageContents, body, command, response, parsedResponse, err_1;
             var _c, _d, _e, _f;
-            var image = _b.image, maintainFormat = _b.maintainFormat, priorPage = _b.priorPage, prompt = _b.prompt;
+            var buffers = _b.buffers, maintainFormat = _b.maintainFormat, priorPage = _b.priorPage, prompt = _b.prompt;
             return __generator(this, function (_g) {
                 switch (_g.label) {
                     case 0:
@@ -148,25 +180,18 @@ var BedrockModel = /** @class */ (function () {
                         if (maintainFormat && priorPage && priorPage.length) {
                             systemPrompt += "\n\n".concat((0, constants_1.CONSISTENCY_PROMPT)(priorPage));
                         }
-                        return [4 /*yield*/, (0, utils_1.encodeImageToBase64)(image)];
+                        imageContents = buffers.map(function (buffer) { return ({
+                            source: {
+                                data: (0, utils_1.encodeImageToBase64)(buffer),
+                                media_type: "image/png",
+                                type: "base64",
+                            },
+                            type: "image",
+                        }); });
+                        messages.push({ role: "user", content: imageContents });
+                        _g.label = 1;
                     case 1:
-                        base64Image = _g.sent();
-                        messages.push({
-                            role: "user",
-                            content: [
-                                {
-                                    type: "image",
-                                    source: {
-                                        data: base64Image,
-                                        media_type: "image/png",
-                                        type: "base64",
-                                    },
-                                },
-                            ],
-                        });
-                        _g.label = 2;
-                    case 2:
-                        _g.trys.push([2, 4, , 5]);
+                        _g.trys.push([1, 3, , 4]);
                         body = __assign({ anthropic_version: "bedrock-2023-05-31", max_tokens: ((_c = this.llmParams) === null || _c === void 0 ? void 0 : _c.maxTokens) || 4096, messages: messages, system: systemPrompt }, (0, utils_1.convertKeysToSnakeCase)((_d = this.llmParams) !== null && _d !== void 0 ? _d : {}));
                         command = new client_bedrock_runtime_1.InvokeModelCommand({
                             accept: "application/json",
@@ -175,7 +200,7 @@ var BedrockModel = /** @class */ (function () {
                             modelId: this.model,
                         });
                         return [4 /*yield*/, this.client.send(command)];
-                    case 3:
+                    case 2:
                         response = _g.sent();
                         parsedResponse = JSON.parse(new TextDecoder().decode(response.body));
                         return [2 /*return*/, {
@@ -183,11 +208,11 @@ var BedrockModel = /** @class */ (function () {
                                 inputTokens: ((_e = parsedResponse.usage) === null || _e === void 0 ? void 0 : _e.input_tokens) || 0,
                                 outputTokens: ((_f = parsedResponse.usage) === null || _f === void 0 ? void 0 : _f.output_tokens) || 0,
                             }];
-                    case 4:
+                    case 3:
                         err_1 = _g.sent();
                         console.error("Error in Bedrock completion", err_1);
                         throw err_1;
-                    case 5: return [2 /*return*/];
+                    case 4: return [2 /*return*/];
                 }
             });
         });
