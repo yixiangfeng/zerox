@@ -181,7 +181,7 @@ var OpenAIModel = /** @class */ (function () {
                         _f.label = 1;
                     case 1:
                         _f.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, axios_1.default.post("https://openrouter.ai/api/v1/chat/completions", __assign({ messages: messages, model: this.model }, (0, utils_1.convertKeysToSnakeCase)((_c = this.llmParams) !== null && _c !== void 0 ? _c : null)), {
+                        return [4 /*yield*/, axios_1.default.post("https://api.openai.com/v1/chat/completions", __assign({ messages: messages, model: this.model }, (0, utils_1.convertKeysToSnakeCase)((_c = this.llmParams) !== null && _c !== void 0 ? _c : null)), {
                                 headers: {
                                     Authorization: "Bearer ".concat(this.apiKey),
                                     "Content-Type": "application/json",
@@ -230,7 +230,7 @@ var OpenAIModel = /** @class */ (function () {
                     case 1:
                         _d.apply(_c, [(_e.content = _j.sent(),
                                 _e)]);
-                        return [4 /*yield*/, axios_1.default.post("https://openrouter.ai/api/v1/chat/completions", __assign({ messages: messages, model: this.model, response_format: {
+                        return [4 /*yield*/, axios_1.default.post("https://api.openai.com/v1/chat/completions", __assign({ messages: messages, model: this.model, response_format: {
                                     json_schema: { name: "extraction", schema: schema },
                                     type: "json_schema",
                                 } }, (0, utils_1.convertKeysToSnakeCase)((_f = this.llmParams) !== null && _f !== void 0 ? _f : null)), {

@@ -1,5 +1,5 @@
 import { CompletionArgs, CompletionResponse, ExtractionArgs, ExtractionResponse, ModelInterface, OpenAICredentials, OpenAILLMParams, OperationMode } from "../types";
-export default class OpenRouterModel implements ModelInterface {
+export default class OpenAIModel implements ModelInterface {
     private apiKey;
     private model;
     private llmParams?;
